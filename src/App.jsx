@@ -21,56 +21,34 @@ import EditPurchaseOrder from "./components/PurchaseOrder/EditPurchaseOrder/Edit
 import EditInspectionReportForm from "./components/EditInspectionReportForm";
 import EditInspectionReportTable from "./components/EditInspectionReportTable.jsx";
 import ViewSupplierRegistration from "./components/Checker/CheckerSupplierRegistration/ViewSupplierRegistration";
-
-
-
-
+import EditUser from "./components/EditUser";
+import EditCustomerOrderForm from "./components/EditCustomerOrderForm";
+import EditCustomerOrderTable from "./components/EditCustomerOrderTable.jsx";
+import EditCAForm from "./components/EditCAForm.jsx";
+import { useRoleMenus } from "./context/RoleMenuContext";
 
 const App = () => {
-  const [menuItems, setMenuItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const token = sessionStorage.getItem('jwt_token')!= null?sessionStorage.getItem('jwt_token'):'';
-  const roleId = sessionStorage.getItem('roleId')!= null?sessionStorage.getItem('roleId'):'';
-  console.log(" app token ...............",token);
-  useEffect(() => {
-    if (roleId && token) {
-      async function fetchMenu() {
-        try {
-          const res = await axiosInstance.get(`/api/roles/roleMenus/${roleId}`);
-          setMenuItems(res.data);
-        } catch (error) {
-          console.error("Failed to fetch menu items:", error);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchMenu();
-    } else {
-      setLoading(false); // Stop loading if no token
-    }
-  }, [roleId, token]);
+  const token = sessionStorage.getItem('jwt_token') || '';
+   const { menuItems = [], loading } = useRoleMenus();
 
-  useEffect(() => {
-    console.log("Available Components in componentsMap:", componentsMap);
-  }, [componentsMap]);
+  if (token && loading) {
+    return <div style={{ padding: '2rem' }}>Loading menus...</div>;
+  }
 
   return (
-    <>
-      <Router basename="/aviationui">
+    <Router basename="/aviationui">
       <Suspense fallback={<div>Loading...</div>}>
-      {!token ? (
         <Routes>
-          <Route path="/" element={<LoginPage />} />
-        </Routes>
-      ) : (
-        <Routes>
-        <Route path="/" element={<LoginPage />} />
+          {!token ? (
+            <Route path="/" element={<LoginPage />} />
+          ) : (
+            <>
+              <Route path="/" element={<LoginPage />} />
+              <Route path="/homePage" element={<HomePage />} />
         <Route path="/passwordChange" element={<PasswordChange />} />
-        <Route path="/homePage" element={<HomePage />} />
         <Route path="/editProduct/:productId" element={<EditProduct />} />
-        <Route path='/editUser' element={<componentsMap.EditUser />} />
-        <Route path="/editRole/:roleId" element={<componentsMap.EditRole />} />
+        <Route path='/editUser' element={<EditUser />} />
+        {/* <Route path="/editRole/:roleId" element={<EditRole />} /> */}
         <Route path="/editstoreAcceptance" element={<EditStoreAcceptance />} />
         <Route path="/editmaterial" element={<EditMaterialNote />} />
         <Route path="/editsupplier" element={<EditSupplierTable />} />
@@ -79,42 +57,32 @@ const App = () => {
         <Route path="/ViewSupplier" element={<ViewSupplierRegistration />} />
         <Route path="/editInspectionReportForm" element={<EditInspectionReportForm />} />
         <Route path="/editReport" element={<EditInspectionReportTable/>} />
-        <Route path="/editmaterialrequisition" element={<EditMaterialRequisition />}/>
         <Route path="/editpurchaserequisition" element={<EditPurchaseRequisition />}/>
         <Route path="/purchaseOrder" element={<PurchaseOrderForm />}/>
         <Route path="/purchaserequistion" element={<AddPurchaseRequisition />}/>
         <Route path="/viewpurchaseOrder" element={<ViewPurchaseOrderPage />}/>
         <Route path="/editpurchaseorder" element={<EditPurchaseOrder />}/>
-        <Route path='/editUser' element={<componentsMap.EditUser />} />
-        <Route path="/editRole/:roleId" element={<componentsMap.EditRole />} />
+        <Route path="/editCustomerOrderForm" element={<EditCustomerOrderForm />} />
+        <Route path="/editCustomerOrder" element={<EditCustomerOrderTable/>} />
+        <Route path="/editCAForm" element={<EditCAForm/>} />
+        {/* <Route path="/ViewStoreAcc" element={<ViewSupplierRegis />} /> */}
 
-  
-  {menuItems.flatMap((menu) =>
-      menu.subMenus.map((sub) => {
-        const Component = componentsMap[sub.component]; // component = "AddUser" or "RoleMenuMapping"
-        const routePath = `${sub.path.replace(/^\/+/, "")}`;
-        console.log("Registering route:", routePath);
-
-        if (!Component) return null;
-          return (
-          <Route
-          key={routePath}
-          path={routePath}
-          element={<Component />}
-          />
-        );
-      })
-    )}
-      
-
-            {/* Fallback */}
-            <Route path="*" element={<div style={{ padding: "2rem" }}>404 - Page Not Found</div>} />
-          </Routes>
-        )}
+    {menuItems.flatMap((menu) =>
+                menu.subMenus.map((sub) => {
+                  const Component = componentsMap[sub.component];
+                  const routePath = `${sub.path.replace(/^\/+/, "")}`;
+                  if (!Component) return null;
+                  return <Route key={routePath} path={routePath} element={<Component />} />;
+                })
+              )}
+            </>
+          )}
+          {/* Fallback */}
+          <Route path="*" element={<div style={{ padding: "2rem" }}>404 - Page Not Found</div>} />
+        </Routes>
       </Suspense>
       <ToastContainer />
     </Router>
-    </>
   );
 };
 

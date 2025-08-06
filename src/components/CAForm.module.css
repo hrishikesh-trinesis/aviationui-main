@@ -1,0 +1,351 @@
+/* PurchaseOrderForm.module.css */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.printContainer {
+  width: 100%;
+  background-color: white;
+  padding: 1rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 1px solid black;
+}
+
+/* Company Section */
+/* .companySection {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 1rem;
+} */
+
+.companySection {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid black;
+   /* padding-bottom: 0.2rem; */
+}
+
+  
+  .companyLogo {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* .logoImage {
+    margin-right: 1rem;
+  } */
+
+.companyInfo {
+  flex: 1;
+  /* border-right: 1px solid black; */
+}
+
+.logoImage {
+  height: 100px;
+  width: auto;
+ margin-right: 1rem;
+}
+
+.companyName {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0 0 0.5rem 0;
+}
+
+.companyAddress {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.orderInfoSection {
+  flex: 1;
+  max-width: 45%;
+}
+
+.orderInfoGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.orderInfoLabel {
+  font-weight: bold;
+  text-align: right;
+}
+
+/* Address Section */
+.addressSection {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 1rem;
+}
+
+.addressBox, .deliveryBox {
+  flex: 1;
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem;
+}
+
+.addressContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.addressTitle {
+  font-weight: bold;
+}
+
+.addressText {
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Payment Terms */
+.paymentTerms {
+  border-bottom: 1px solid #cbd5e1;
+  padding-bottom: 1rem;
+}
+
+.paymentContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.paymentTitle {
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.paymentText {
+  flex: 1;
+}
+
+/* Table */
+.tableContainer {
+  margin-bottom: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.5rem;
+}
+
+.tableHead {
+  background-color: #f1f5f9;
+}
+
+.tableHeader {
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem;
+  font-weight: bold;
+  text-align: left;
+}
+
+.tableHeaderCenter {
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.tableCell {
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem;
+}
+
+.tableCellCenter {
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.addButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.addButton {
+  background-color: #10b981;
+  color: white;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background-color: #059669;
+}
+
+/* Footer Section */
+.footerSection {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.footerLeft {
+  flex: 2;
+}
+
+.legalText {
+  margin-bottom: 1rem;
+}
+
+.legalTitle {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.termsSection {
+  margin-bottom: 1rem;
+}
+
+.termsTitle {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.termsGrid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.totalSection {
+  flex: 1;
+}
+
+.totalTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.totalLabel {
+  text-align: right;
+  padding: 0.5rem;
+  font-weight: bold;
+}
+
+.totalValue {
+  padding: 0.5rem;
+  width: 40%;
+}
+
+.signature {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.signatureTitle {
+  font-weight: bold;
+}
+
+.signatureSpace {
+  margin-top: 2rem;
+  border-top: 1px solid #000;
+  padding-top: 0.5rem;
+}
+
+/* Form Footer */
+.formFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-top: 2rem;
+  border-top: 1px solid #cbd5e1;
+  padding-top: 0.5rem;
+}
+
+.formFooter p {
+  margin: 0;
+}
+
+/* Save Button */
+.saveButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.saveButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #3b82f6;
+  color: white;
+  font-weight: bold;
+padding: 0.75rem 1.5rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+}
+
+.saveButton:hover {
+  background-color: #2563eb;
+}
+
+.saveIcon {
+  margin-right: 0.25rem;
+}
+
+/* Input Fields */
+.inputField {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.textareaField {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  resize: vertical;
+}
+
+/* Print styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .printContainer, .printContainer * {
+    visibility: visible;
+  }
+  
+  .printContainer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    box-shadow: none;
+  }
+  
+  .saveButtonContainer, .addButton {
+    display: none;
+  }
+}

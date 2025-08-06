@@ -139,7 +139,8 @@ const ViewPurchaseRequisitionPage = () => {
     { field: "requiredQty", label: "Required Qty", width: "130px" },
     { field: "requiredDate", label: "Required Date", width: "150px" },
     { field: "remark", label: "Remark", width: "100px" },
-    { field: "batchnumber", label: "Batch Number", width: "150px"}
+    { field: "batchnumber", label: "Batch Number", width: "150px"},
+    { field: "unitOfMeasurement", label: "Unit of Measurement", width: "150px" }
   ];
 
   // const handlePrintClick = () => {

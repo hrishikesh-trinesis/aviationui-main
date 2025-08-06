@@ -7,21 +7,22 @@ import { Eye, EyeOff, User, Lock, AlertCircle } from "lucide-react";
 import Header from "./Header";
 import Footer from "./Footer";
 import AviationLogo from "../static/img/AviationLogo.png";
-import { Toast } from "react-bootstrap";
-// Import CSS module
 import styles from "./Login.module.css";
-//import { useHistory } from 'react-router-dom';
+import { useRoleMenus } from "../context/RoleMenuContext"; 
 
 const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [location, setLocation] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const navigate = useNavigate();
-  //const history = useHistory();
+  const [redirectToHome, setRedirectToHome] = useState(false); // Add this state
+  const { refreshMenus } = useRoleMenus();
+
 
   useEffect(() => {
     // Trigger animation after component mounts
@@ -70,12 +71,18 @@ const LoginPage = () => {
       const response = await axiosInstance.post("/auth/login", {
         username,
         password,
-      });
+      },
+    {
+        headers: {
+          "X-User-Location": location, 
+        },
+      }
+    );
   
-      console.log('API response:', response);  // Log the response to check if it's returned properly
+      console.log('API response:', response); 
+
       if (response.status === 200) {
-        // If login is successful and no password change is needed
-      // Check if the token is present in response.data.token
+      
       if (response && response.data && response.data.token) {
 
         const { token, passwordExpired, username, role} = response.data;
@@ -83,27 +90,42 @@ const LoginPage = () => {
         // Save the token and username to localStorage
         sessionStorage.setItem('username', username); 
         sessionStorage.setItem("jwt_token", token); // Store JWT token
+         sessionStorage.setItem("role", role); 
+         sessionStorage.setItem("location", location);
+         console.log("Role : ",role);
         if (passwordExpired) {
           alert('Please change your password!');
           navigate('/passwordChange');
         
       } else {
- console.log("inside else");
-        const roleResponse = await axiosInstance.get(`/api/roles/byname/${role}`);
-        if (roleResponse?.data?.id) {
-    console.log(roleResponse.data);
-    sessionStorage.setItem("roleId", roleResponse.data.id);
+  try {
+  const roleResponse = await axiosInstance.get(`/api/roles/byname/${role}`);
+  if (roleResponse?.data?.id) {
+    const roleId = roleResponse.data.id;
+    sessionStorage.setItem("roleId", roleId); // ✅ REQUIRED
+    console.log("Role ID:", roleId);
+
+   await refreshMenus(); // make sure menus are loaded
+    navigate("/homePage");
+  } else {
+    console.error("Role not found in response.");
+    setErrorMessage("User role is not configured correctly. Please contact support.");
+  }
+} catch (roleError) {
+  console.error("Error fetching roleId:", roleError);
+  setErrorMessage("Error fetching role information.");
+}
+    }
   } else {
     console.error("Role not found or invalid response");
   }
-  setTimeout(() => {
-    console.log("Navigating to /homePage now...");
-    navigate("/homePage");
-  }, 2000);
+      }
+      else if(response.status === 401){
+                setErrorMessage("Invalid username or password.");
+
       }
     }
-  }
-    } catch (error) {
+    catch (error) {
       console.error("Login Error:", error); // Log the error to see more details
       if (error.response && error.response.status === 403) {
         // If password change is required
@@ -140,6 +162,21 @@ const LoginPage = () => {
 
           <div className={styles.body}>
             <form onSubmit={handleLogin}>
+            <div className={styles.formGroup}>
+            <label htmlFor="location" className={styles.label}>Location</label>
+            <select
+              id="location"
+              className={styles.formInput}
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              required
+            >
+            <option value="">-- Select Location --</option>
+            <option value="mumbai">Mumbai</option>
+            <option value="delhi">Delhi</option>
+            </select>
+            </div>
+            
               <div className={styles.formGroup}>
                 <label htmlFor="username" className={styles.label}>
                   Username

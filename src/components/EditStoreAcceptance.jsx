@@ -11,8 +11,15 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Footer from "./Footer";
 import CustomBreadcrumb from "./Breadcrumb/CustomBreadcrumb";
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const EditStoreAcceptance = () => {
+    const navigate = useNavigate();
+
+  const location = useLocation();
+  const {elementId} =location.state || "";
+
   // Variable
   const [form, setForm] = useState({
     partNum: "",
@@ -32,6 +39,21 @@ const EditStoreAcceptance = () => {
   const [listData, setListData] = useState("");
 
   // ######################### FUNCTION ########################
+  useEffect(() => {
+      const fetchStoreDetail = async () => {
+        try {
+          let response = await getStoreDetail(elementId);
+          console.log(response);
+          if (response.data) {
+          setForm({ ...response.data });
+        }
+        } catch (error) {
+          console.error("Error fetching store details:", error);
+          alert("Error fetching store details.");
+        }
+      };
+      fetchStoreDetail();
+    }, []);
 
   // This functiom handle all change event's
   const handleChange = (event) => {
@@ -55,17 +77,20 @@ const EditStoreAcceptance = () => {
 
   // This function is used to send save request
   async function sendSaveRequest() {
-    if (listData.includes(partNum)) {
-      let updateRes = await updateStore(partNum, form);
-    } else {
-      let createRes = await createStore(form);
-    }
+   // if (listData.includes(partNum)) {
+      let updateRes = await updateStore(elementId, form);
+      alert("Update Successfully... ");
+      navigate("/ViewStoreAcc");
+    //} else {
+     // let createRes = await createStore(form);
+    //}
   }
 
   // This function is used to handle view response
   async function handleViewRequest(event, partNum) {
     event.preventDefault();
-    let response = await getStoreDetail(partNum);
+    let response = await getStoreDetail(elementId);
+    console.log(response);
     if (response.data) {
       setForm({ ...response.data });
     }

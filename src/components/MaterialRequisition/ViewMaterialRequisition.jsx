@@ -152,6 +152,7 @@ const ViewMaterialRequisitionPage = () => {
     { field: "issueQty", label: "Issue Qty", width: "120px" },
     { field: "issuedQty", label: "Issued Qty", width: "120px" },
     { field: "batchLotNo", label: "Batch/Lot", width: "120px" },
+    { field: "unitOfMeasurement", label: "UOM", width: "140px" },
   ];
 
   const handlePrintClick = (requisition) => {

@@ -18,7 +18,7 @@ const EditUser = () => {
     lastName: "",
     username: "",
     role: "",
-    dob: "",
+    dateOfBirth: "",
     mobileNumber: "",
     email: "",
     address: "",
@@ -281,8 +281,8 @@ const EditUser = () => {
                      <input
                        className="form-control w-100"
                        type="date"
-                       name="dob"
-                       value={form.dob}
+                       name="dateOfBirth"
+                       value={form.dateOfBirth}
                        onChange={handleChange}
                        required
                      />

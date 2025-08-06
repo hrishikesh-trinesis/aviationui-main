@@ -18,94 +18,53 @@ const AddPurchaseRequisition = () => {
     requiredQty: "",
     requiredDate: "",
     remark: "",
+    unitOfMeasurement: "",
   });
 
   // State to store all the purchase requisitions added
   const [purchaseRequisitions, setPurchaseRequisitions] = useState([]);
-  
+
   // State to store dropdown options from API
-  const [descriptions, setDescriptions] = useState([]);
-  const [partNumbers, setPartNumbers] = useState([]);
-  
-  // State to track loading status
-  const [descLoading, setDescLoading] = useState(false);
-  const [partLoading, setPartLoading] = useState(false);
-  
-  // State to track any error in API calls
-  const [descError, setDescError] = useState(null);
-  const [partError, setPartError] = useState(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch descriptions from API when component mounts
+  // Fetch data once on component mount
   useEffect(() => {
-    const getDescriptions = async () => {
-      setDescLoading(true);
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        // Replace this with your actual API call
-        const data = await fetchPartNumbersAndDescriptions();
-        console.log(data,"dataaaa")
-        setDescriptions(data);
-        setDescError(null);
+        const response = await fetchPartNumbersAndDescriptions(); // replace with actual API call
+        setData(response);
+        setError(null);
       } catch (err) {
-        console.error("Error fetching descriptions:", err);
-        setDescError("Failed to load descriptions. Please try again later.");
-        // Fallback data in case the API fails
-        setDescriptions([
-          { id: 1, description: "Raw Material" },
-          { id: 2, description: "Finished Goods" },
-          { id: 3, description: "Spare Parts" },
-          { id: 4, description: "Consumables" },
-          { id: 5, description: "Office Supplies" }
+        console.error("API Error:", err);
+        setError("Failed to load product data. Please try again.");
+        // fallback data
+        setData([
+          { productName: "Sample A", productDescription: "Desc A" },
+          { productName: "Sample B", productDescription: "Desc B" },
         ]);
       } finally {
-        setDescLoading(false);
+        setLoading(false);
       }
     };
-    
-    getDescriptions();
+
+    fetchData();
   }, []);
 
-  // Fetch part numbers from API when component mounts
-  useEffect(() => {
-    const getPartNumbers = async () => {
-      setPartLoading(true);
-      try {
-        // Replace this with your actual API call
-        const data = await fetchPartNumbersAndDescriptions();
-        setPartNumbers(data);
-        setPartError(null);
-      } catch (err) {
-        console.error("Error fetching part numbers:", err);
-        setPartError("Failed to load part numbers. Please try again later.");
-        // Fallback data in case the API fails
-        setPartNumbers([
-          { id: 1, partNo: "PT001", description: "Engine Part" },
-          { id: 2, partNo: "PT002", description: "Transmission Part" },
-          { id: 3, partNo: "PT003", description: "Brake System Part" },
-          { id: 4, partNo: "PT004", description: "Electrical Component" },
-          { id: 5, partNo: "PT005", description: "Body Component" }
-        ]);
-      } finally {
-        setPartLoading(false);
-      }
-    };
-    
-    getPartNumbers();
-  }, []);
+  // Handle part number (productName) change
+  const handleProductChange = (e) => {
+    const selected = e.target.value;
+    const match = data.find((item) => item.productName === selected);
 
-  // Update current stock when part number changes
-  useEffect(() => {
-    if (form.partNumber) {
-      // Find the selected part number in the list
-      const selectedPart = partNumbers.find(part => part.partNo === form.partNumber);
-      if (selectedPart && selectedPart.currentStock) {
-        // If the part has a current stock value, update the form
-        setForm(prevForm => ({
-          ...prevForm,
-          currentStock: selectedPart.currentStock.toString()
-        }));
-      }
-    }
-  }, [form.partNumber, partNumbers]);
+    // Update form state with both partNumber and description
+    setForm(prevForm => ({
+      ...prevForm,
+      partNumber: selected,
+      description: match ? match.productDescription : ""
+    }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -194,10 +153,23 @@ const AddPurchaseRequisition = () => {
   const handleAddRequisition = (e) => {
     e.preventDefault();
 
+    // Log all form field values to console
+    console.log("Form values:", {
+      srNo: form.srNo,
+      partNumber: form.partNumber,
+      description: form.description,
+      currentStock: form.currentStock,
+      requiredQty: form.requiredQty,
+      requiredDate: form.requiredDate,
+      remark: form.remark,
+      unitOfMeasurement: form.unitOfMeasurement,
+    });
+
     // Iterate through each field and validate
     for (const [field, rules] of Object.entries(validationRules)) {
       const error = validateField(field, form[field], rules);
       if (error) {
+        console.log(`Validation error for ${field}:`, error);
         alert(error);
         return;
       }
@@ -206,11 +178,11 @@ const AddPurchaseRequisition = () => {
     // Add the current form to the purchaseRequisitions array with a unique ID
     const newRequisition = {
       ...form,
-      id: Date.now() // Using timestamp as a simple unique ID
+      id: Date.now(), // Using timestamp as a simple unique ID
     };
-    
+
     setPurchaseRequisitions([...purchaseRequisitions, newRequisition]);
-    
+
     // Reset the form after adding to the list
     setForm({
       srNo: "",
@@ -220,14 +192,17 @@ const AddPurchaseRequisition = () => {
       requiredQty: "",
       requiredDate: "",
       remark: "",
+      unitOfMeasurement: "",
     });
-    
+
     alert("Purchase Requisition added to the list!");
   };
 
   // Remove a purchase requisition from the list
   const handleRemoveRequisition = (id) => {
-    setPurchaseRequisitions(purchaseRequisitions.filter(req => req.id !== id));
+    setPurchaseRequisitions(
+      purchaseRequisitions.filter((req) => req.id !== id)
+    );
   };
 
   // Submit all purchase requisitions
@@ -240,24 +215,25 @@ const AddPurchaseRequisition = () => {
     try {
       // You can modify this to submit all requisitions at once if your API supports it
       // For now, we'll just show a success message
-      alert(`${purchaseRequisitions.length} Purchase Requisitions ready to be submitted!`);
+      alert(
+        `${purchaseRequisitions.length} Purchase Requisitions ready to be submitted!`
+      );
       // let newData=[...purchaseRequisitions]
-      const requisitionsToSubmit = purchaseRequisitions.map(req => ({
+      const requisitionsToSubmit = purchaseRequisitions.map((req) => ({
         srNo: req.srNo,
         partNumber: req.partNumber,
         description: req.description,
         currentStock: req.currentStock,
         requiredQty: req.requiredQty,
         requiredDate: req.requiredDate,
-        remark: req.remark
+        remark: req.remark,
       }));
       // Uncomment below to actually submit each requisition to the API
       // for (const requisition of purchaseRequisitions) {
-        await createPurchaseRequisition(requisitionsToSubmit);
+      await createPurchaseRequisition(requisitionsToSubmit);
       // }
       setPurchaseRequisitions([]);
       alert("All Purchase Requisitions submitted successfully!");
-      
     } catch (error) {
       console.error("Error submitting purchase requisitions:", error);
       alert("Failed to submit purchase requisitions.");
@@ -282,12 +258,13 @@ const AddPurchaseRequisition = () => {
                 style={{ minHeight: "397px" }}
               >
                 <div className="col-md-12">
-                  <form onSubmit={handleAddRequisition} style={{ height: "100%" }}>
+                  <form
+                    onSubmit={handleAddRequisition}
+                    style={{ height: "100%" }}
+                  >
                     <div className="col-md-12 p-2 d-flex">
                       <div className="col-md-6 p-2 d-flex">
-                        <label className="col-md-4 mt-1">
-                          Sr No
-                        </label>
+                        <label className="col-md-4 mt-1">Sr No</label>
                         <input
                           className="form-control w-100"
                           type="text"
@@ -302,29 +279,30 @@ const AddPurchaseRequisition = () => {
                       </div>
                       <div className="col-md-6 p-2 d-flex">
                         <label className="col-md-4 mt-2">Part Number</label>
-                        {partLoading ? (
+                        {loading ? (
                           <div className="d-flex align-items-center">
-                            <div className="spinner-border text-primary me-2" role="status">
+                            <div
+                              className="spinner-border text-primary me-2"
+                              role="status"
+                            >
                               <span className="visually-hidden">Loading...</span>
                             </div>
                             <span>Loading part numbers...</span>
                           </div>
-                        ) : partError ? (
-                          <div className="alert alert-danger w-100">
-                            {partError}
-                          </div>
+                        ) : error ? (
+                          <div className="alert alert-danger w-100">{error}</div>
                         ) : (
                           <select
                             className="form-select w-100"
                             name="partNumber"
                             value={form.partNumber}
-                            onChange={handleChange}
+                            onChange={handleProductChange}
                             required
                           >
                             <option value="">Select a part number</option>
-                            {partNumbers.map((part) => (
-                              <option key={part.id} value={part.partNo}>
-                                {part.productName}
+                            {data.map((item, index) => (
+                              <option key={index} value={item.productName}>
+                                {item.productName}
                               </option>
                             ))}
                           </select>
@@ -334,37 +312,34 @@ const AddPurchaseRequisition = () => {
 
                     <hr className="mx-0 my-2 p-0 border" />
 
+                    {/* Description Dropdown (Disabled and auto-selected) */}
                     <div className="col-md-12 p-3 d-flex">
                       <label className="col-md-2 mt-2">Description</label>
-                      {descLoading ? (
+                      {loading ? (
                         <div className="d-flex align-items-center">
-                          <div className="spinner-border text-primary me-2" role="status">
+                          <div
+                            className="spinner-border text-primary me-2"
+                            role="status"
+                          >
                             <span className="visually-hidden">Loading...</span>
                           </div>
                           <span>Loading descriptions...</span>
                         </div>
-                      ) : descError ? (
-                        <div className="alert alert-danger w-100">
-                          {descError}
-                        </div>
+                      ) : error ? (
+                        <div className="alert alert-danger w-100">{error}</div>
                       ) : (
                         <select
                           className="form-select w-100"
                           name="description"
                           value={form.description}
-                          onChange={handleChange}
-                          required
+                          disabled
                         >
-                          <option value="">Select a description</option>
-                          {descriptions.map((desc) => (
-                            <option key={desc.id} value={desc.description}>
-                              {desc.productDescription}
-                            </option>
-                          ))}
+                          <option value="">
+                            {form.description || "Auto-selected"}
+                          </option>
                         </select>
                       )}
                     </div>
-
                     <div className="col-md-12 d-flex">
                       <div className="col-md-6 p-2 d-flex">
                         <label className="col-md-4 mt-2">Current Stock</label>
@@ -395,6 +370,29 @@ const AddPurchaseRequisition = () => {
                         />
                       </div>
                     </div>
+
+                    <div className="col-md-6 p-1 d-flex">
+                      <label className="col-md-4 mt-2">Unit of Measurement</label>
+                      <select
+                        className="form-control w-100"
+                        name="unitOfMeasurement"
+                        value={form.unitOfMeasurement}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Select Unit</option>
+                        <option value="EA">EA</option>
+                        <option value="RL">RL</option>
+                        <option value="QT">QT</option>
+                        <option value="GAL">GAL</option>
+                        <option value="KIT">KIT</option>
+                        <option value="LTR">LTR</option>
+                        <option value="SHT">SHT</option>
+                        <option value="Sq.ft">Sq.ft</option>
+                        <option value="Sq.mtr">Sq.mtr</option>
+                      </select>
+                    </div>
+
 
                     <div className="col-md-12 d-flex">
                       <div className="col-md-6 p-2 d-flex">
@@ -432,7 +430,7 @@ const AddPurchaseRequisition = () => {
                   </form>
                 </div>
               </div>
-              
+
               {/* Display the list of purchase requisitions */}
               {purchaseRequisitions.length > 0 && (
                 <div className="row mx-1 card border border-dark shadow-lg py-2 mt-4">
@@ -465,7 +463,9 @@ const AddPurchaseRequisition = () => {
                               <td>
                                 <button
                                   className="btn btn-danger btn-sm"
-                                  onClick={() => handleRemoveRequisition(req.id)}
+                                  onClick={() =>
+                                    handleRemoveRequisition(req.id)
+                                  }
                                 >
                                   Remove
                                 </button>
@@ -476,7 +476,7 @@ const AddPurchaseRequisition = () => {
                       </table>
                     </div>
                     <div className="text-end mb-3">
-                      <button 
+                      <button
                         className="btn btn-success"
                         onClick={handleSubmitAll}
                       >

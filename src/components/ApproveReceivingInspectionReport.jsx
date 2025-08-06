@@ -177,8 +177,12 @@ const ApproveReceivingInspectionReport = () => {
       toast.success(`Report ${action} successfully, ${response}`);
       fetchData();
     } catch (error) {
+      if(error.response && error.response.status === 409) {
+        toast.error("Report data already exists in the database");
+      }else{
       console.error("Error fetching report details: ", error);
       toast.error("Failed to fetch report details");
+    }
     }
   
     // Reset states
@@ -295,6 +299,7 @@ const ApproveReceivingInspectionReport = () => {
     { field: "reportNo", label: "Report No.", width: "100px" },
     { field: "date", label: "Date", width: "100px" },
     { field: "qty", label: "Quantity", width: "100px" },
+    { field: "qtyReceive", label: "Receive Quantity", width: "100px" },
     { field: "invoiceObservation", label: "Invoice  Observation", width: "100px" },
     { field: "manufacturerCertObservation", label: "Manufacturer Cert Observation", width: "100px" },
     { field: "supplierCertObservation", label: "Supplier Cert. Observation", width: "100px" },
@@ -668,6 +673,7 @@ const ApproveReceivingInspectionReport = () => {
   <p><strong>Supplier Name:</strong> {selectedRow.supplierName}</p>
   <p><strong>Report No:</strong> {selectedRow.reportNo}</p>
   <p><strong>Quantity:</strong> {selectedRow.qty}</p>
+  <p><strong>Receive Quantity:</strong> {selectedRow.qtyReceive}</p>
   <p><strong>Date:</strong> {selectedRow.date}</p>
   <p><strong>Invoice  Observation:</strong> {selectedRow.invoiceObservation}</p>
   <p><strong>Manufacturer Cert Observation:</strong> {selectedRow.manufacturerCertObservation}</p>

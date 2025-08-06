@@ -21,24 +21,29 @@ const EditPurchaseRequisition = () => {
     requiredQty: "",
     requiredDate: "",
     remark: "",
+    unitOfMeasurement: "",
   });
 
   // State to track original data for comparison
   const [originalData, setOriginalData] = useState(null);
-  
+
   // State to store dropdown options from API
   const [descriptions, setDescriptions] = useState([]);
   const [partNumbers, setPartNumbers] = useState([]);
-  
+
   // State to track loading status
   const [descLoading, setDescLoading] = useState(false);
   const [partLoading, setPartLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // State to track any error in API calls
   const [descError, setDescError] = useState(null);
   const [partError, setPartError] = useState(null);
   const [error, setError] = useState(null);
+
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedDescription, setSelectedDescription] = useState("");
+  const [data, setData] = useState([]);
 
   // Fetch the specific purchase requisition data when component mounts
   useEffect(() => {
@@ -50,27 +55,24 @@ const EditPurchaseRequisition = () => {
   const fetchRequisitionData = async () => {
     setIsLoading(true);
     try {
-
       const requisitionData = await getPurchaseRequisitionDetail(RequisitionID);
-      // Format the date from the database (if needed)
-    //   if (requisitionData.requiredDate) {
-    //     const date = new Date(requisitionData.requiredDate);
-    //     const formattedDate = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-    //     requisitionData.requiredDate = formattedDate;
-    //   }
-      
+
       setForm(requisitionData.data);
-    //   setOriginalData(requisitionData);
+      setSelectedProduct(requisitionData.data.partNumber || ""); // Set part number for dropdown
+      setSelectedDescription(requisitionData.data.description || ""); // Set description dropdown
+
       setError(null);
       setIsLoading(false);
     } catch (err) {
       console.error("Error fetching Purchase requisition data:", err);
       setError("Failed to load Purchase requisition data. Please try again.");
-    } 
+    }
   };
-  useEffect(()=>{
-    console.log(form,"form")
-  },[form])
+
+
+  useEffect(() => {
+    console.log(form, "form")
+  }, [form])
   // Fetch descriptions from API when component mounts
   useEffect(() => {
     const getDescriptions = async () => {
@@ -94,7 +96,7 @@ const EditPurchaseRequisition = () => {
         setDescLoading(false);
       }
     };
-    
+
     getDescriptions();
   }, []);
 
@@ -104,39 +106,61 @@ const EditPurchaseRequisition = () => {
       setPartLoading(true);
       try {
         const data = await fetchPartNumbersAndDescriptions();
-        setPartNumbers(data);
+        setData(data); // This is used in dropdown
+        setPartNumbers(data); // Optional if used elsewhere
         setPartError(null);
       } catch (err) {
         console.error("Error fetching part numbers:", err);
         setPartError("Failed to load part numbers. Please try again later.");
-        // Fallback data in case the API fails
-        // setPartNumbers([
-        //   { id: 1, partNo: "PT001", description: "Engine Part" },
-        //   { id: 2, partNo: "PT002", description: "Transmission Part" },
-        //   { id: 3, partNo: "PT003", description: "Brake System Part" },
-        //   { id: 4, partNo: "PT004", description: "Electrical Component" },
-        //   { id: 5, partNo: "PT005", description: "Body Component" }
-        // ]);
       } finally {
         setPartLoading(false);
       }
     };
-    
+
+
     getPartNumbers();
   }, []);
 
+  useEffect(() => {
+    if (form.partNumber && data.length > 0) {
+      setSelectedProduct(form.partNumber);
+
+      const match = data.find((item) => item.productName === form.partNumber);
+      const description = match ? match.productDescription : "";
+      setSelectedDescription(description);
+    }
+  }, [form, data]);
+
   // Update current stock when part number changes
-//   useEffect(() => {
-//     if (form.partNumber && !originalData) { // Only auto-update if not editing an existing record
-//       const selectedPart = partNumbers.find(part => part.partNo === form.partNumber);
-//       if (selectedPart && selectedPart.currentStock) {
-//         setForm(prevForm => ({
-//           ...prevForm,
-//           currentStock: selectedPart.currentStock.toString()
-//         }));
-//       }
-//     }
-//   }, [form.partNumber, partNumbers, originalData]);
+  //   useEffect(() => {
+  //     if (form.partNumber && !originalData) { // Only auto-update if not editing an existing record
+  //       const selectedPart = partNumbers.find(part => part.partNo === form.partNumber);
+  //       if (selectedPart && selectedPart.currentStock) {
+  //         setForm(prevForm => ({
+  //           ...prevForm,
+  //           currentStock: selectedPart.currentStock.toString()
+  //         }));
+  //       }
+  //     }
+  //   }, [form.partNumber, partNumbers, originalData]);
+
+  // Handle part number (productName) change
+  const handleProductChange = (e) => {
+    const selected = e.target.value;
+    setSelectedProduct(selected);
+
+    const match = data.find((item) => item.productName === selected);
+    const description = match ? match.productDescription : "";
+
+    setSelectedDescription(description);
+
+    setForm((prevForm) => ({
+      ...prevForm,
+      partNumber: selected,
+      description: description,
+    }));
+  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -322,40 +346,40 @@ const EditPurchaseRequisition = () => {
                           required
                         />
                       </div>
-                      <div className="col-md-6 p-2 d-flex">
-                        <label className="col-md-4 mt-2">Part Number</label>
-                        {partLoading ? (
-                          <div className="d-flex align-items-center">
-                            <div className="spinner-border text-primary me-2" role="status">
-                              <span className="visually-hidden">Loading...</span>
-                            </div>
-                            <span>Loading part numbers...</span>
+                    </div>
+                    <div className="col-md-6 p-2 d-flex">
+                      <label className="col-md-4 mt-2">Part Number</label>
+                      {partLoading ? (
+                        <div className="d-flex align-items-center">
+                          <div className="spinner-border text-primary me-2" role="status">
+                            <span className="visually-hidden">Loading...</span>
                           </div>
-                        ) : partError ? (
-                          <div className="alert alert-danger w-100">
-                            {partError}
-                          </div>
-                        ) : (
-                          <select
-                            className="form-select w-100"
-                            name="partNumber"
-                            value={form.partNumber}
-                            onChange={handleChange}
-                            required
-                          >
-                            <option value="">Select a part number</option>
-                            {partNumbers.map((part) => (
-                              <option key={part.id} value={part.partNo}>
-                                {part.partNumber}
-                              </option>
-                            ))}
-                          </select>
-                        )}
-                      </div>
+                          <span>Loading part numbers...</span>
+                        </div>
+                      ) : partError ? (
+                        <div className="alert alert-danger w-100">{partError}</div>
+                      ) : (
+                        <select
+                          className="form-select w-100"
+                          name="partNumber"
+                          value={selectedProduct}
+                          onChange={handleProductChange}
+                          required
+                        >
+                          <option value="">Select a part number</option>
+                          {data.map((item, index) => (
+                            <option key={index} value={item.productName}>
+                              {item.productName}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+
                     </div>
 
                     <hr className="mx-0 my-2 p-0 border" />
 
+                    {/* Description Dropdown (Disabled and auto-selected) */}
                     <div className="col-md-12 p-3 d-flex">
                       <label className="col-md-2 mt-2">Description</label>
                       {descLoading ? (
@@ -366,25 +390,20 @@ const EditPurchaseRequisition = () => {
                           <span>Loading descriptions...</span>
                         </div>
                       ) : descError ? (
-                        <div className="alert alert-danger w-100">
-                          {descError}
-                        </div>
+                        <div className="alert alert-danger w-100">{descError}</div>
                       ) : (
                         <select
                           className="form-select w-100"
                           name="description"
-                          value={form.description}
-                          onChange={handleChange}
-                          required
+                          value={selectedDescription}
+                          disabled
                         >
-                          <option value="">Select a description</option>
-                          {descriptions.map((desc) => (
-                            <option key={desc.id} value={desc.description}>
-                              {desc.description}
-                            </option>
-                          ))}
+                          <option value="">
+                            {selectedDescription || "Auto-selected"}
+                          </option>
                         </select>
                       )}
+
                     </div>
 
                     <div className="col-md-12 d-flex">
@@ -418,6 +437,28 @@ const EditPurchaseRequisition = () => {
                       </div>
                     </div>
 
+                    <div className="col-md-6 p-1 d-flex">
+                      <label className="col-md-4 mt-2">Unit of Measurement</label>
+                      <select
+                        className="form-control w-100"
+                        name="unitOfMeasurement"
+                        value={form.unitOfMeasurement}
+                        onChange={handleChange}
+                        required
+                      >
+                        <option value="">Select Unit</option>
+                        <option value="EA">EA</option>
+                        <option value="RL">RL</option>
+                        <option value="QT">QT</option>
+                        <option value="GAL">GAL</option>
+                        <option value="KIT">KIT</option>
+                        <option value="LTR">LTR</option>
+                        <option value="SHT">SHT</option>
+                        <option value="Sq.ft">Sq.ft</option>
+                        <option value="Sq.mtr">Sq.mtr</option>
+                      </select>
+                    </div>
+
                     <div className="col-md-12 d-flex">
                       <div className="col-md-6 p-2 d-flex">
                         <label className="col-md-4 mt-2">Required Date</label>
@@ -447,8 +488,8 @@ const EditPurchaseRequisition = () => {
                     </div>
 
                     <div className="col-md-12 text-end m-1 p-4 text-right">
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         className="btn btn-secondary me-2"
                         onClick={handleCancel}
                       >

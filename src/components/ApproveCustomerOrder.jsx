@@ -3,14 +3,19 @@ import Footer from "./Footer";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import {
-    getViewReportList,
+  deleteCustomerOrder,
+  getCustomerOrder,
+  ApproveCustOrders,
+  getpendingCustomerOrderList,
 } from "../services/db_manager";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import CustomBreadcrumb from "./Breadcrumb/CustomBreadcrumb";
+import { Modal, Button, Form } from "react-bootstrap";
 import {PrintInspectionReport} from "./PrintInspectionReport";
-import styles from "./Checker/EditSupplier/EditSupplierTable.module.css";
-const ViewInspectionReports = () => {
+import styles from "./Checker/Checker.module.css";
+
+const ApproveCustomerOrder = () => {
   // State
   const [tableData, setTableData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,12 +24,16 @@ const ViewInspectionReports = () => {
   const [sortField, setSortField] = useState("formId");
   const [sortDirection, setSortDirection] = useState("asc");
   const [isLoading, setIsLoading] = useState(true);
+  // Modified: Changed selectedItems from array to single string ID
   const [selectedItem, setSelectedItem] = useState("");
-  const [selectAll, setSelectAll] = useState(false);
   const [selecteReportData, setSelecteReportData] = useState();
+  const [selectAll, setSelectAll] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
+  const [showModal1, setShowModal1] = useState(false);
   const [actionType, setActionType] = useState(""); // "accept" or "reject"
   const [remark, setRemark] = useState("");
   const [reportData, setReportData] = useState();
@@ -33,7 +42,7 @@ const ViewInspectionReports = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await getViewReportList();
+      const response = await getpendingCustomerOrderList();
       if (response) {
         console.log(response);
         if (response?.data) {
@@ -44,6 +53,7 @@ const ViewInspectionReports = () => {
           console.error("Unexpected response format:", response);
           setTableData([]);
         }
+        //setTableData(response);
       }
     } catch (error) {
       console.error("Error fetching data", error);
@@ -56,12 +66,122 @@ const ViewInspectionReports = () => {
   useEffect(() => {
     fetchData();
   }, []);
+  useEffect(() => {
+    if (selectedRow) {
+      setShowModal1(true);
+    }
+  }, [selectedRow]);
+
+
+  // Modified: Handle checkbox selection for single selection only
+  const handleCheckboxChange = (report) => {
+    // If the same checkbox is clicked again, deselect it
+    if (selectedItem === report.srNo) {
+      setSelectedItem("");
+    } else {
+      setSelectedItem(report.srNo);
+      setSelecteReportData(report);
+    }
+  };
+
+  // Modified: Handle select all - now it just clears selection
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItem("");
+    } else {
+      // Select the first item when clicking "select all"
+      if (currentItems.length > 0) {
+        const firstItemId = currentItems[0].formId;
+        setSelectedItem(firstItemId);
+      }
+    }
+    setSelectAll(!selectAll);
+  };
 
   // Reset selection when page changes
   useEffect(() => {
     setSelectedItem("");
     setSelectAll(false);
   }, [currentPage, itemsPerPage]);
+
+  const deleteSelectedElement = async (elementId) => {
+    if (window.confirm("Are you sure you want to delete this Report?")) {
+      try {
+        const response = await deleteCustomerOrder(elementId);
+        if (response) {
+          setTableData((prevData) =>
+            prevData.filter((report) => report.formId !== elementId)
+          );
+          toast.success("reprot deleted successfully");
+        }
+      } catch (error) {
+        console.error("Failed to delete report", error);
+        toast.error("Failed to delete report. Please try again.");
+      }
+    }
+  };
+
+  const editSelectedElement = async (elementId) => {
+    if (elementId !== "") {
+      try {
+        //let reportId = elementId;
+        let reportData = await getCustomerOrder(elementId);
+        reportData = reportData.data;
+        console.log("Fetched Order data:", reportData);  // Log the fetched data
+
+        setSelectedRow(reportData);
+        console.log("Selected Row Data: ", reportData);  // Log to verify data
+      } catch (error) {
+        console.error("Error fetching Order details: ", error);
+        toast.error("Failed to fetch Order details");
+      }
+    }
+  };
+
+  // Modal handlers
+  const handleOpenModal = (type) => {
+    if (!selectedItem) {
+      toast.warning("Please select a Order");
+      return;
+    }
+    setActionType(type);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setRemark("");
+  };
+
+  const handleSubmitAction = async () => {
+    const action = actionType === "accept" ? "accepted" : actionType === "reject" ? "rejected"
+    : actionType === "Edit" ? "edited" : "";
+    // Add 'remark' to each object in selecteReportData
+    const updatedReportData = {
+      ...selecteReportData,
+      remark: remark,
+      // reportId: selectedItem,
+      checkerUserName:sessionStorage.getItem('username'),
+      checkerDate: new Date().toISOString().split('T')[0],
+      userRole: sessionStorage.getItem('roleId'),
+      userAction: action === "rejected" ? "3" : action === "edited" ? "4" : "2", // 👈 conditional value
+    };
+    try {
+      const response = await ApproveCustOrders(updatedReportData);
+      toast.success(`Order ${action} successfully, ${response}`);
+      fetchData();
+    } catch (error) {
+      console.error("Error fetching Order details: ", error);
+      toast.error("Failed to fetch Order details");
+    }
+  
+    // Reset states
+    setSelectedItem("");
+    setSelectAll(false);
+    setRemark("");
+    handleCloseModal();
+  };
+  
 
   // Search functionality
   const filteredData = Array.isArray(tableData)
@@ -127,32 +247,10 @@ const ViewInspectionReports = () => {
 
     return pageNumbers;
   };
-const handleCheckboxChange = (report) => {
-    // If the same checkbox is clicked again, deselect it
-    if (selectedItem === report.inspectionReportId) {
-      setSelectedItem("");
-    } else {
-      setSelectedItem(report.inspectionReportId);
-      setSelecteReportData(report);
-    }
-  };
 
-  // Modified: Handle select all - now it just clears selection
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedItem("");
-    } else {
-      // Select the first item when clicking "select all"
-      if (currentItems.length > 0) {
-        const firstItemId = currentItems[0].formId;
-        setSelectedItem(firstItemId);
-      }
-    }
-    setSelectAll(!selectAll);
-  };
   const handlePrintClick = (report) => {
     // Store the report data
-    console.log("Report",report)
+    console.log("Order",report)
     setReportData(report);
 
     // Short delay to ensure React has updated the state and rendered the component
@@ -174,48 +272,31 @@ const handleCheckboxChange = (report) => {
     }, 500);
   };
 
-
   // Column definitions for the table
   const columns = [
-    { field: "inspectionReportId", label: "Inspection Report Id", width: "100px" },
-    { field: "partNumber", label: "Part Number", width: "100px" },
-    { field: "partDesc", label: "Part Description", width: "100px" },
-    { field: "purchaseOrderNo", label: "Purchase Order No.", width: "100px" },
-    { field: "supplierName", label: "Supplier Name", width: "100px" },
-    { field: "reportNo", label: "Report No.", width: "100px" },
-    { field: "date", label: "Date", width: "100px" },
-    { field: "qty", label: "Quantity", width: "100px" },
-    { field: "qtyReceive", label: "Receive Quantity", width: "100px" },
-    { field: "invoiceObservation", label: "Invoice  Observation", width: "100px" },
-    { field: "manufacturerCertObservation", label: "Manufacturer Cert Observation", width: "100px" },
-    { field: "supplierCertObservation", label: "Supplier Cert. Observation", width: "100px" },
-    { field: "fullTraceabilityObservation", label: " cert. Full Traceability Observation", width: "100px" },
-    { field: "batchNumberObservation", label: "Batch Number Observation", width: "100px" },
-    {
-      field: "dateOfManufacturingObservation",
-      label: "Date of Manufacturing & Date of Expiry Observation",
-      width: "100px",
-    },
-    { field: "selfLifeObservation", label: "Self Life Observation", width: "100px" },
-    { field: "tdsObservation", label: "Technical Data Sheet(TDS) & MSDS Observation", width: "100px" },
-    { field: "materialConditionObservation", label: "Material Condition Observation", width: "100px" },
-    { field: "specificationObservation", label: "Specification Observation", width: "100px" },
-    { field: "documentObservation", label: "Documents Observation", width: "100px" },
-    { field: "lotAccepted", label: "Lot Accepted", width: "100px" },
-    { field: "remark", label: "Remark", width: "100px" },
-    { field: "makerUserName", label: "Maker Name", width: "100px" },
+    { field: "orderNo", label: "Order No", width: "100px" },
+    { field: "roNo", label: "RO No.", width: "100px" },
+    { field: "roReceiveDate", label: "RO Received Date", width: "100px" },
+    { field: "customerName", label: "Customer Name", width: "100px" },
+    { field: "partNo", label: "Part No.", width: "100px" },
+    { field: "partDescription", label: "Part Desc", width: "100px" },
+    { field: "quantity", label: "Quantity", width: "100px" },
+    { field: "batchNo", label: "Batch No.", width: "100px" },
+    { field: "srNo", label: "Sr. No.", width: "100px" },
+    { field: "status", label: "Status", width: "100px" },
+    { field: "makerUserName", label: "Maker UserName", width: "100px" },
     { field: "makerDate", label: "Maker Date", width: "100px" },
-    { field: "checkerUserName", label: "Checker Name", width: "100px" },
-    { field: "checkerDate", label: "Checker  Date", width: "100px" },
-];
+    { field: "userRole", label: "Maker Role", width: "100px" },
 
+  ];
+  console.log("showModal1:", showModal1, "selectedRow:", selectedRow);
   return (
     <div className="wrapper">
       <Sidebar />
       <div className="content">
         <Header />
         <div style={{ marginTop: "10px" }}>
-          <CustomBreadcrumb breadcrumbsLabel="View Inspection Report" />
+          <CustomBreadcrumb breadcrumbsLabel="Approve Customer Order" />
           <div className="printView">
             <PrintInspectionReport dataMap={reportData} />
           </div>
@@ -359,8 +440,8 @@ const handleCheckboxChange = (report) => {
                                 <input
                                   className="form-check-input"
                                   type="checkbox"
-                                  id={`check-${report.inspectionReportId}`}
-                                  checked={selectedItem === report.inspectionReportId}
+                                  id={`check-${report.srNo}`}
+                                  checked={selectedItem === report.srNo}
                                   onChange={() =>
                                     handleCheckboxChange(report)
                                   }
@@ -382,15 +463,24 @@ const handleCheckboxChange = (report) => {
                                 {report[column.field]}
                               </td>
                             ))}
-                             <td>
+                            <td>
                               <div className="d-flex justify-content-center gap-2">
                                 <button
+                                  className="btn btn-sm btn-outline-primary"
+                                  onClick={() =>
+                                    editSelectedElement(report.srNo)
+                                  }
+                                  title="View Doc"
+                                >
+                                  <i className="fa-solid fa-eye"></i>
+                                </button>
+                                {/* <button
                                   className="btn btn-sm btn-outline-secondary"
                                   onClick={() => handlePrintClick(report)}
                                   title="Print Doc"
                                 >
                                   <i className="fa-solid fa-print"></i>
-                                </button>
+                                </button> */}
                               </div>
                             </td>
                           </tr>
@@ -504,14 +594,114 @@ const handleCheckboxChange = (report) => {
                   </nav>
                 </div>
               </div>
+
+              {/* Accept/Reject Buttons */}
+              <div className="d-flex justify-content-end mt-3 gap-3">
+                <button
+                  className="btn btn-outline-success"
+                  onClick={() => handleOpenModal("accept")}
+                  disabled={!selectedItem}
+                >
+                  <i className="fa-solid fa-check me-2"></i>
+                  Approved
+                </button>
+                <button
+                  className="btn btn-outline-info"
+                  onClick={() => handleOpenModal("Edit")}
+                  disabled={!selectedItem}
+                >
+                  <i className="fa-solid fa-paper-plane me-2"></i>
+                  Send To Edit
+                </button>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => handleOpenModal("reject")}
+                  disabled={!selectedItem}
+                >
+                  <i className="fa-solid fa-xmark me-2"></i>
+                  Reject
+                </button>
+              </div>
             </div>
           </div>
         </div>
         <Footer />
       </div>
-     
+      
+      {showModal1 && selectedRow && (
+  <div className="modalBackdrop1">
+    <Modal show={showModal1} onHide={() => setShowModal1(false)}>
+  <Modal.Header closeButton>
+    <Modal.Title>Customer Order</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+  <p><strong>Order No.:</strong> {selectedRow.orderNo}</p>
+  <p><strong>RO No.:</strong> {selectedRow.roNo}</p>
+  <p><strong>RO Recevied Date:</strong> {selectedRow.roReceiveDate}</p>
+  <p><strong>Part No.:</strong> {selectedRow.partNo}</p>
+  <p><strong>Part Description:</strong> {selectedRow.partDescription}</p>
+  <p><strong>Quantity:</strong> {selectedRow.quantity}</p>
+  <p><strong>Sr. No.:</strong> {selectedRow.srNo}</p>
+  <p><strong>Batch No.:</strong> {selectedRow.batchNo}</p>
+  <p><strong>Status:</strong> {selectedRow.status}</p>
+  <p><strong>Maker UserName:</strong> {selectedRow.makerUserName}</p>
+  <p><strong>Maker Date :</strong> {selectedRow.makerDate}</p>
+  <p><strong>Maker Role:</strong> {selectedRow.userRole}</p>
+  
+  </Modal.Body>
+  <Modal.Footer>
+    <Button onClick={() => setShowModal1(false)}>Close</Button>
+  </Modal.Footer>
+</Modal>
+  </div>
+    )}
+      {/* Accept/Reject Modal */}
+      <Modal show={showModal} onHide={handleCloseModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {actionType === "accept"
+              ? "Accept Report"
+              : actionType === "Edit"
+              ? "Send To Edit"
+              : "Reject Report"}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to {actionType} the selected Order?</p>
+          <Form.Group className="mb-3">
+            <Form.Label>Remark</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              value={remark}
+              onChange={(e) => setRemark(e.target.value)}
+              placeholder="Enter your remarks here..."
+              required
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Cancel
+          </Button>
+          <Button
+            variant={actionType === "accept" ? "success" : "danger"}
+            onClick={handleSubmitAction}
+            disabled={!remark.trim()}
+          >
+            Confirm{" "}
+            {actionType === "accept"
+              ? "Accept"
+              : actionType === "Edit"
+              ? "Send to Edit"
+              : "Reject"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      
     </div>
   );
 };
 
-export default ViewInspectionReports;
+export default ApproveCustomerOrder;

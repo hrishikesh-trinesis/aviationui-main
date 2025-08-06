@@ -97,6 +97,7 @@ export const PrintInspectionReport = (dataMap) => {
               <strong>Qty:</strong>{" "}
               {dataMap["dataMap"]?.qty || "N/A"}
             </div>
+             
           </div>
 
           <div
@@ -109,6 +110,10 @@ export const PrintInspectionReport = (dataMap) => {
             <div style={{ width: "60%" }}>
               <strong>Supplier:</strong>{" "}
               {dataMap["dataMap"]?.supplierName || "N/A"}
+            </div>
+            <div style={{ width: "40%" }}>
+              <strong>Receive Qty:</strong>{" "}
+              {dataMap["dataMap"]?.qtyReceive || "N/A"}
             </div>
           </div>
         
@@ -375,7 +380,8 @@ export const PrintInspectionReport = (dataMap) => {
                     textAlign: "center",
                     borderBottom: "1px solid black",
                   }}
-                >{dataMap["dataMap"]?.dateOfManufacturingObservation || "N/A"}</td>
+                >{dataMap["dataMap"]?.dateOfManufacturingObservation || "N/A"}<br/>
+                {dataMap["dataMap"]?.dateOfExpiryObservation || "N/A"}</td>
               </tr>
 
               <tr>

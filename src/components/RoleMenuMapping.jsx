@@ -150,10 +150,6 @@ const RoleMenuMapping = () => {
               type="checkbox"
               checked={!!roleMenuMapping[selectedRole]?.[menu.id]}
              onChange={(e) => handleParentCheck(menu.id, e.target.checked)}
-              // checked={isParentChecked}
-              // onChange={(e) =>
-              //   handleCheckboxChange(menu.id, e.target.checked, subMenus)
-             // }
             />
             <strong style={{ marginLeft: '8px' }}>{menu.name}</strong>
           </label>
@@ -191,18 +187,18 @@ const RoleMenuMapping = () => {
       <Sidebar />
       <div className="content">
         <Header />
-        <div style={{ marginTop: "10px" }}>
+        <div style={{ marginTop: "10px", marginBottom: "4rem" }}>
         <CustomBreadcrumb breadcrumbsLabel="Role Menu Mapping"  isBack={true}/>
-        <div className="my-2 p-2">
-          <div className="container-fluid">
-            <div className="row mx-1 card border border-dark shadow-lg py-2" style={{height : '397px'}}>
-              <div className="col-md-12">
+         <div
+            className="card border border-dark shadow mx-4 my-4 p-2"
+            style={{ height: "70vh" }}
+          >
                 <form style={{ height: '100%' }}>
-  <div className="row mb-3">
-    <div className="col-md-6">
-      <label htmlFor="roleDropdown" className="form-label fw-bold">
-        Select Role:
-      </label>
+                <div className="row mb-3">
+                <div className="col-md-6">
+                 <label htmlFor="roleDropdown" className="form-label fw-bold">
+                    Select Role:
+                 </label>
       <select
         id="roleDropdown"
         className="form-select"
@@ -217,16 +213,19 @@ const RoleMenuMapping = () => {
     </div>
   </div>
 
-  <hr className="my-3" />
-
-  <div className="menu-section" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-    {menus.length === 0 ? (
-      <div className="alert alert-info">Loading menu data...</div>
-    ) : (
-      renderMenus(menus)
-    )}
-  </div>
-
+    {/* <hr className="my-3" /> */}
+       <div className="row mb-12">
+          {/* <div className="col-md-6"> */}
+             <label className="form-label fw-bold">Menu List</label>
+            <div className="menu-section" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              {menus.length === 0 ? (
+               <div className="alert alert-info">Loading menu data...</div>
+                ) : (
+                 renderMenus(menus)
+                   )}
+            </div>
+          {/* </div> */}
+        </div>
   <div className="mt-4">
     <button
       className="btn btn-primary"
@@ -239,13 +238,13 @@ const RoleMenuMapping = () => {
 </form>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div >
+            
+        
+      
       
       <Footer />
     </div >
+    </div>
   );
 };
 

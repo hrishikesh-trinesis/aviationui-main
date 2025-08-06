@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import styles from "./sidebar.module.css"; // Importing CSS modules
 import AviationLogo from "../static/img/AviationLogo.png";
-import {jwtDecode as jwt_decode} from 'jwt-decode';
 import { Users, Package, Warehouse, FileText } from "lucide-react";
+import { useRoleMenus } from "../context/RoleMenuContext"; 
 
 const iconMap = {
   users: <Users size={18} />,
@@ -11,27 +11,11 @@ const iconMap = {
   filetext: <FileText size={18} />,
 };
 
-const storedMenuItems = sessionStorage.getItem("menuItems");
-  const menuItems = storedMenuItems ? JSON.parse(storedMenuItems) : [];
-const Sidebar = () => {  //() => {
-  console.log("Menu Items being passed:", menuItems);
-  const [collapseState, setCollapseState] = useState({
-  });
-
-  const useUserRoles = () => {
-    const [roles, setRoles] = useState([]);
-  
-    useEffect(() => {
-      const token = sessionStorage.getItem("jwt_token");
-      if (token) {
-        const decodedToken = jwt_decode(token);
-        setRoles(decodedToken.roles || []);
-      }
-    }, []);
-  
-    const hasRole = (role) => roles.includes(role);
-    return { roles, hasRole };
-  };
+//const storedMenuItems = sessionStorage.getItem("menuItems");
+  //const menuItems = storedMenuItems ? JSON.parse(storedMenuItems) : [];
+const Sidebar = () => {
+  const { menuItems = [], loading } = useRoleMenus(); // ✅ Fix context destructuring
+  const [collapseState, setCollapseState] = useState({});
 
   const toggleCollapse = (section) => {
     setCollapseState((prevState) => ({
@@ -40,9 +24,9 @@ const Sidebar = () => {  //() => {
     }));
   };
 
-  //console.log("Menu Items being passed in sidbar:", menuItems);
-
-
+  if (loading) {
+    return <div className={styles.sidebar}>Loading Sidebar...</div>; // Optional loader
+  }
   return (
     <div className={styles.sidebar}>
       <div className={styles.sidebarHeader}>

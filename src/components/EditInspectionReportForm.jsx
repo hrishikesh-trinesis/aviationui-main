@@ -19,12 +19,14 @@ const EditInspectionReportform = () => {
     reportNo: "",
     date: "",
     qty: "",
+    qtyReceive: "",
     invoiceObservation: "",
     manufacturerCertObservation: "",
     supplierCertObservation: "",
     fullTraceabilityObservation: "",
     batchNumberObservation: "",
     dateOfManufacturingObservation: "",
+    dateOfExpiryObservation: "",
     selfLifeObservation: "",
     tdsObservation: "",
     materialConditionObservation: "",
@@ -52,20 +54,6 @@ const EditInspectionReportform = () => {
       }
     }, [reportData, reportId]);
 
-//   useEffect(() => {
-//     const fetchMaterialDetail = async () => {
-//       try {
-//         const response = await getMaterialDetail(materialId);
-//         if (response.data) {
-//           setForm(response.data);
-//         }
-//       } catch (error) {
-//         console.error("Error fetching material details:", error);
-//         alert("Error fetching material details.");
-//       }
-//     };
-//     fetchMaterialDetail();
-//   }, [materialId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -203,6 +191,17 @@ const EditInspectionReportform = () => {
                               disabled
                             />
                           </div>
+                          <div className="col-md-6 p-2 d-flex">
+                        <label className="col-md-4 mt-2">Receive Qty</label>
+                        <input
+                          className="form-control w-100"
+                          type="text"
+                          name="qtyReceive"
+                          value={form.qtyReceive}
+                          onChange={handleChange}
+                          disabled
+                        />
+                      </div>
                           </div>
     
                           <div className="row mx-1 card border border-dark shadow-lg py-2 mt-4">
@@ -285,13 +284,27 @@ const EditInspectionReportform = () => {
                                 </tr>
                                 <tr>
                                   <td>6</td>
-                                  <td>Date of Manufacturing & Date of Expiry(If Applicable)</td>
+                                  <td>Date of Manufacturing(If Applicable)</td>
                                   <td>Must match(Physical Unit lable & all COC)</td>
                                   <td><input
                               className="form-control w-100"
                               type="text"
                               name="dateOfManufacturingObservation"
                               value={form.dateOfManufacturingObservation}
+                              onChange={handleChange}
+                              required
+                            /></td>
+                                </tr>
+
+                                <tr>
+                                  <td>6</td>
+                                  <td>Date of Expiry(If Applicable)</td>
+                                  <td>Must match(Physical Unit lable & all COC)</td>
+                                  <td><input
+                              className="form-control w-100"
+                              type="text"
+                              name="dateOfExpiryObservation"
+                              value={form.dateOfExpiryObservation}
                               onChange={handleChange}
                               required
                             /></td>

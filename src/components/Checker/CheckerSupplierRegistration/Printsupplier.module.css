@@ -129,4 +129,18 @@
     .printButton, .addRowButton {
       display: none;
     }
+
+    .companyLogo {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+  }
+  
+  .logoImage {
+    margin-right: 1rem;
+  }
+
+   .companyInfo {
+    width: 50%;
+  }
   }

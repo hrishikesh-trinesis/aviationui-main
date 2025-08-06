@@ -25,6 +25,7 @@ const EditMaterialRequisition = () => {
     issueQty: "",
     issuedQty: "",
     batchLotNo: "",
+    unitOfMeasurement: "",
   });
 
   const fetchMaterialRequisitionDetail = async () => {
@@ -305,10 +306,36 @@ const EditMaterialRequisition = () => {
                       </div>
                     </div>
 
-                    <div className="col-md-12 text-end m-1 p-4 text-right">
-                      <button type="submit" className="btn btn-primary">
-                        Update Requisition
-                      </button>
+                    <div className="col-md-12 d-flex">
+                      <div className="col-md-6 p-2 d-flex">
+                        <label className="col-md-4 mt-2">Unit of Measurement</label>
+                        <select
+                          className="form-select w-100"
+                          name="unitOfMeasurement"
+                          value={form.unitOfMeasurement}
+                          onChange={handleChange}
+                          required
+                        >
+                          <option value="">Select Unit</option>
+                          <option value="EA">EA</option>
+                          <option value="RL">RL</option>
+                          <option value="QT">QT</option>
+                          <option value="GAL">GAL</option>
+                          <option value="KIT">KIT</option>
+                          <option value="LTR">LTR</option>
+                          <option value="SHT">SHT</option>
+                          <option value="Sq.ft">Sq.ft</option>
+                          <option value="Sq.mtr">Sq.mtr</option>
+                        </select>
+                      </div>
+
+                      <div className="col-md-6 p-2 d-flex text-end">
+                        <div className="col-md-4 mt-2 text-end">
+                          <button type="submit" className="btn btn-primary">
+                            Update Requisition
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </form>
                 </div>

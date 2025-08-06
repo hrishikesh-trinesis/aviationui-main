@@ -13,13 +13,14 @@ const AddUser = () => {
     lastName: "",
     username: "",
     role: "",
-    dob: "",
+    dateOfBirth: "",
     mobileNumber: "",
     email: "",
     address: "",
     city: "",
     state: "",
     country: "",
+    location: sessionStorage.getItem('location'),
   });
   const [roles, setRoles] = useState([]); // NEW STATE
 
@@ -171,13 +172,14 @@ const validationRules = {
     lastName: "",
     username: "",
     role: "",
-    dob: "",
+    dateOfBirth: "",
     mobileNumber: "",
     email: "",
     address: "",
     city: "",
     state: "",
     country: "",
+    location: "",
       });
     } catch (error) {
       console.error("Error adding user:", error);
@@ -279,8 +281,8 @@ const validationRules = {
                     <input
                       className="form-control w-100"
                       type="date"
-                      name="dob"
-                      value={form.dob}
+                      name="dateOfBirth"
+                      value={form.dateOfBirth}
                       onChange={handleChange}
                       required
                     />
@@ -365,6 +367,23 @@ const validationRules = {
                       />
                     </div>
                     </div>
+                    {/* <div className="col-md-12 p-2 d-flex">
+                    <div className="col-md-6 p-2 d-flex">
+                    <label className="col-md-4 mt-2">Location</label>
+                    <select
+                    className="form-control w-100"
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    required
+                     >
+                    <option value="">Select</option>
+                    <option value="mumbai">Mumbai</option>
+                    <option value="delhi">Delhi</option>
+                    </select>
+                    </div>
+                    </div>
+                    </div> */}
                     <div className="col-md-12 text-right mt-1">
                       <div className="text-end m-0">
                     <button type="submit" className="btn btn-primary">Add User</button>

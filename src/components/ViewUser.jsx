@@ -147,7 +147,7 @@ const ViewUser = () => {
     { field: "middleName", label: "MiddleName", width: "180px" },
     { field: "lastName", label: "LastName", width: "200px" },
     { field: "username", label: "userName", width: "80px" },
-    { field: "dob", label: "DateOfBirth", width: "100px" },
+    { field: "dateOfBirth", label: "DateOfBirth", width: "100px" },
     { field: "mobileNumber", label: "MobileNumber", width: "100px" },
     { field: "email", label: "Email", width: "180px" },
     { field: "address", label: "Address", width: "150px" },

@@ -3,83 +3,115 @@ import Footer from "./Footer";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import {
-  listAllMaterials,
-  deleteMaterial,
-  getMaterialDetail,
+    getCAFormList,
+    getCAForm,
+    deleteCAForm,
 } from "../services/db_manager";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import CustomBreadcrumb from "./Breadcrumb/CustomBreadcrumb";
-
-const ViewMaterialPage = () => {
+import {PrintCAForm} from "./PrintCAForm";
+import styles from "./Checker/EditSupplier/EditSupplierTable.module.css";
+const ViewCAForm = () => {
   // State
   const [tableData, setTableData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [sortField, setSortField] = useState("materialId");
+  const [sortField, setSortField] = useState("formId");
   const [sortDirection, setSortDirection] = useState("asc");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState("");
+  const [selectAll, setSelectAll] = useState(false);
+  const [selecteReportData, setSelecteReportData] = useState();
+
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [actionType, setActionType] = useState(""); // "accept" or "reject"
+  const [remark, setRemark] = useState("");
+  const [reportData, setReportData] = useState();
 
   const navigate = useNavigate();
-
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getCAFormList();
+      if (response) {
+        console.log(response);
+        if (response?.data) {
+          setTableData(response.data);
+        } else if (Array.isArray(response)) {
+          setTableData(response);
+        } else {
+          console.error("Unexpected response format:", response);
+          setTableData([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching data", error);
+      toast.error("Failed to load reports");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   // Fetching data when the component is mounted
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await listAllMaterials();
-        setTableData(response.data || []);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching materials", error);
-        toast.error("Failed to load materials");
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchData();
   }, []);
 
-  // Delete the selected material
-  const deleteSelectedElement = async (materialId) => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      try {
-        await deleteMaterial(materialId);
-        setTableData((prevData) =>
-          prevData.filter((material) => material.materialId !== materialId)
-        );
-        toast.success("Item deleted successfully");
-      } catch (error) {
-        console.error("Failed to delete material", error);
-        toast.error("Failed to delete material. Please try again.");
-      }
-    }
-  };
-
-  // Edit the selected material
-  const editSelectedElement = async (materialId) => {
-    try {
-      const response = await getMaterialDetail(materialId);
-      const materialData = response?.data;
-
-      if (materialData) {
-        navigate("/editmaterial", { state: { materialId, materialData } });
-      }
-    } catch (error) {
-      console.error("Error fetching material details: ", error);
-      toast.error("Failed to fetch material details");
-    }
-  };
+  // Reset selection when page changes
+  useEffect(() => {
+    setSelectedItem("");
+    setSelectAll(false);
+  }, [currentPage, itemsPerPage]);
 
   // Search functionality
-  const filteredData = tableData.filter((material) => {
-    return Object.values(material).some(
-      (value) =>
-        value &&
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
+  const filteredData = Array.isArray(tableData)
+  ? tableData.filter((report) =>
+      Object.values(report).some(
+        (value) =>
+          value &&
+          value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    )
+  : [];
+
+
+  const deleteSelectedElement = async (elementId) => {
+      if (window.confirm("Are you sure you want to delete this CA Form?")) {
+        try {
+          const response = await deleteCAForm(elementId);
+          if (response) {
+            setTableData((prevData) =>
+              prevData.filter((report) => report.formId !== elementId)
+            );
+            toast.success("CA Form deleted successfully");
+          }
+        } catch (error) {
+          console.error("Failed to delete CA Form", error);
+          toast.error("Failed to delete CA Form Please try again.");
+        }
+      }
+    };
+  
+    const editSelectedElement = async (elementId) => {
+      if (elementId !== "") {
+        try {
+          let reportId = elementId;
+          let reportData = await getCAForm(elementId);
+          reportData = reportData.data;
+          if (reportId !== null) {
+            navigate("/editCAForm", {
+              state: { reportId, reportData },
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching CA Form details: ", error);
+          toast.error("Failed to fetch CA Form details");
+        }
+      }
+    };
+
 
   // Sorting functionality
   const sortedData = [...filteredData].sort((a, b) => {
@@ -134,22 +166,77 @@ const ViewMaterialPage = () => {
 
     return pageNumbers;
   };
+const handleCheckboxChange = (report) => {
+    // If the same checkbox is clicked again, deselect it
+    if (selectedItem === report.id) {
+      setSelectedItem("");
+    } else {
+      setSelectedItem(report.id);
+      setSelecteReportData(report);
+    }
+  };
+
+  // Modified: Handle select all - now it just clears selection
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItem("");
+    } else {
+      // Select the first item when clicking "select all"
+      if (currentItems.length > 0) {
+        const firstItemId = currentItems[0].formId;
+        setSelectedItem(firstItemId);
+      }
+    }
+    setSelectAll(!selectAll);
+  };
+  const handlePrintClick = (report) => {
+    // Store the report data
+    console.log("Report",report)
+    setReportData(report);
+
+    // Short delay to ensure React has updated the state and rendered the component
+    setTimeout(() => {
+      // Cache original body styles
+      const originalBodyStyle = document.body.style.cssText;
+
+      // Apply print-friendly styles to the body
+      document.body.style.margin = "0";
+      document.body.style.padding = "0";
+
+      // Print the document
+      window.print();
+
+      // Restore original body styles after printing dialog is closed
+      setTimeout(() => {
+        document.body.style.cssText = originalBodyStyle;
+      }, 100);
+    }, 500);
+  };
+
 
   // Column definitions for the table
   const columns = [
-    { field: "materialId", label: "Material ID", width: "100px" },
-    { field: "mrnNo", label: "MRN No", width: "100px" },
-    { field: "partNumber", label: "Part Number", width: "120px" },
-    { field: "partDescription", label: "Description", width: "200px" },
-    { field: "supplierName", label: "Supplier", width: "140px" },
-    { field: "orderNumber", label: "Order Number", width: "140px" },
-    { field: "challanNo", label: "Challan No", width: "140px" },
-    { field: "receiptDate", label: "Receipt Date", width: "140px" },
-    { field: "quantity", label: "Quantity", width: "140px" },
-    { field: "unitOfMeasurement", label: "Unit", width: "120px" },
-    { field: "storeInchargeSign", label: "Store Incharge", width: "140px" },
-    { field: "qualityAcceptance", label: "Quality Acceptance", width: "140px" },
-  ];
+    { field: "formTrackingNumber", label: "Form Trackking No.", width: "100px" },
+    { field: "workOrderNo", label: "WorkOrder Number", width: "100px" },
+    { field: "item", label: "Item", width: "100px" },
+    { field: "description", label: "Description", width: "100px" },
+    { field: "partNo", label: "Part No.", width: "100px" },
+    { field: "quantity", label: "Quantity", width: "100px" },
+    { field: "serialNo", label: "Serial No.", width: "100px" },
+    { field: "status", label: "Status", width: "100px" },
+    { field: "remarks", label: "Remarks", width: "100px" },
+    { field: "approveDesign13a", label: "Approved design data", width: "100px" },
+    { field: "nonApproveDesign13a", label: "Non-approved design data", width: "100px" },
+    { field: "otherRegulation14a", label: "Other regulation specified to Service", width: "100px" },
+    { field: "authorisedSign13b", label: " Authorised Signature", width: "100px" },
+    { field: "authorisationNumber13c", label: "Approval / Authorisation Number", width: "100px" },
+    { field: "name13d", label: "Name", width: "100px" },
+    { field: "date13e", label: "Date", width: "100px" },
+    { field: "selfLiauthorisedSign14bfeObservation", label: "Authorised Signature", width: "100px" },
+    { field: "approvalRefNo14c", label: "Certificate / Approval Ref No", width: "100px" },
+    { field: "name14d", label: "Name", width: "100px" },
+    { field: "date14e", label: "Date", width: "100px" },
+];
 
   return (
     <div className="wrapper">
@@ -157,9 +244,18 @@ const ViewMaterialPage = () => {
       <div className="content">
         <Header />
         <div style={{ marginTop: "10px" }}>
-          <CustomBreadcrumb breadcrumbsLabel="View Material Records" />
+          <CustomBreadcrumb breadcrumbsLabel="View Inspection Report" />
+          <div className="printView">
+            <PrintCAForm dataMap={reportData} />
+          </div>
 
-          <div className="card border-0 shadow-lg mx-4 my-4 rounded-3">
+          <div
+            className={[
+              "normalView",
+              "card border-0 shadow-lg mx-4 my-4 rounded-3",
+              styles.normalViewStyle,
+            ].join(" ")}
+          >
             <div className="card-body">
               <div className="row align-items-center">
                 <div className="col-md-6">
@@ -170,7 +266,7 @@ const ViewMaterialPage = () => {
                     <input
                       type="text"
                       className="form-control border-start-0 ps-0"
-                      placeholder="Search items..."
+                      placeholder="Search reports..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -200,10 +296,9 @@ const ViewMaterialPage = () => {
 
               {isLoading ? (
                 <div className="text-center py-5">
-                  <div
-                    className="spinner-border text-primary"
-                    role="status"
-                  ></div>
+                  <div className="spinner-border text-primary" role="status">
+                    {/* <span className="visually-hidden"></span> */}
+                  </div>
                   <p className="mt-2 text-muted">Loading data...</p>
                 </div>
               ) : (
@@ -217,7 +312,21 @@ const ViewMaterialPage = () => {
                 >
                   <table className="table table-hover table-striped align-middle">
                     <thead>
-                      <tr className="bg-light">
+                      <tr className="bg-blue">
+                        <th
+                          className="position-sticky top-0 bg-light py-3 text-center"
+                          style={{ width: "40px" }}
+                        >
+                          <div className="form-check d-flex justify-content-center">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="selectAll"
+                              checked={selectAll}
+                              onChange={handleSelectAll}
+                            />
+                          </div>
+                        </th>
                         {columns.map((column) => (
                           <th
                             key={column.field}
@@ -265,18 +374,31 @@ const ViewMaterialPage = () => {
                     </thead>
                     <tbody>
                       {currentItems.length > 0 ? (
-                        currentItems.map((material, index) => (
+                        currentItems.map((report, index) => (
                           <tr
-                            key={material.materialId}
+                            key={report.formId}
                             className={
                               index % 2 === 0
                                 ? "bg-white"
                                 : "bg-light bg-opacity-50"
                             }
                           >
+                            <td className="text-center">
+                              <div className="form-check d-flex justify-content-center">
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  id={`check-${report.id}`}
+                                  checked={selectedItem === report.id}
+                                  onChange={() =>
+                                    handleCheckboxChange(report)
+                                  }
+                                />
+                              </div>
+                            </td>
                             {columns.map((column) => (
                               <td
-                                key={`${material.materialId}-${column.field}`}
+                                key={`${report.formId}-${column.field}`}
                                 className="text-nowrap py-3"
                                 style={{
                                   maxWidth: "150px",
@@ -284,30 +406,33 @@ const ViewMaterialPage = () => {
                                   textOverflow: "ellipsis",
                                   whiteSpace: "nowrap",
                                 }}
-                                title={material[column.field]}
+                                title={report[column.field]}
                               >
-                                {material[column.field]}
+                                {report[column.field]}
                               </td>
                             ))}
-                            <td>
+                             <td>
                               <div className="d-flex justify-content-center gap-2">
                                 <button
-                                  className="btn btn-sm btn-outline-primary"
-                                  onClick={() =>
-                                    editSelectedElement(material.materialId)
-                                  }
-                                  title="Edit"
-                                >
-                                  <i className="fa-solid fa-pen-to-square"></i>
-                                </button>
+                                className="btn btn-sm btn-outline-primary"
+                                onClick={() => editSelectedElement(report.id)}
+                                title="Edit"
+                              >
+                                <i className="fa-solid fa-pen-to-square"></i>
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-danger"
+                                onClick={() => deleteSelectedElement(report.id)}
+                                title="Delete"
+                              >
+                                <i className="fa-solid fa-trash"></i>
+                              </button>
                                 <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() =>
-                                    deleteSelectedElement(material.materialId)
-                                  }
-                                  title="Delete"
+                                  className="btn btn-sm btn-outline-secondary"
+                                  onClick={() => handlePrintClick(report)}
+                                  title="Print Doc"
                                 >
-                                  <i className="fa-solid fa-trash"></i>
+                                  <i className="fa-solid fa-print"></i>
                                 </button>
                               </div>
                             </td>
@@ -316,7 +441,7 @@ const ViewMaterialPage = () => {
                       ) : (
                         <tr>
                           <td
-                            colSpan={columns.length + 1}
+                            colSpan={columns.length + 2}
                             className="text-center py-5"
                           >
                             {searchTerm ? (
@@ -427,8 +552,9 @@ const ViewMaterialPage = () => {
         </div>
         <Footer />
       </div>
+     
     </div>
   );
 };
 
-export default ViewMaterialPage;
+export default ViewCAForm;

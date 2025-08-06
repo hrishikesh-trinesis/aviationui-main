@@ -16,13 +16,29 @@ axiosInstance.interceptors.request.use(
       return config;
     }
     const token = sessionStorage.getItem("jwt_token");
+    const location = sessionStorage.getItem("location");
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
     }
-   // config.headers["Content-Type"] = "application/json";
+     if (location) {
+      config.headers["X-User-Location"] = location;
+    }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Clear session data
+      sessionStorage.clear();
+      // Redirect to login page
+      window.location.href = "/";
+    }
+    return Promise.reject(error);
+  }
 );
 export default axiosInstance;

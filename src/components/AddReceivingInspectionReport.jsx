@@ -12,6 +12,7 @@ const AddReceivingInspectionReport = () => {
   const [partLoading, setPartLoading] = useState(false);
   const [partError, setPartError] = useState(null);
   const [selectedPart, setSelectedPart] = useState("");
+  const [document, setDocument] = useState(null);
   const [partDetails, setPartDetails] = useState({
   partDesc: "",
   supplierName: "",
@@ -29,12 +30,14 @@ const AddReceivingInspectionReport = () => {
     reportNo: "",
     date: "",
     qty: "",
+    qtyReceive: "",
     invoiceObservation: "",
     manufacturerCertObservation: "",
     supplierCertObservation: "",
     fullTraceabilityObservation: "",
     batchNumberObservation: "",
     dateOfManufacturingObservation: "",
+    dateOfExpiryObservation: "",
     selfLifeObservation: "",
     tdsObservation: "",
     materialConditionObservation: "",
@@ -59,7 +62,8 @@ const AddReceivingInspectionReport = () => {
          try {
            const res = await fetchPartNumbers();
            console.log("Role data:", res.data);
-           setPartNumbers(res.data);
+          const actualData = res.data.data || res.data; 
+           setPartNumbers(actualData);
          } catch (err) {
            console.error("Error fetching part numbers:", err);
            setPartError("Failed to load part numbers. Please try again later.");
@@ -92,7 +96,7 @@ const AddReceivingInspectionReport = () => {
     const handleAddInspectionReport = async (e) => {
       e.preventDefault();
       //if (!validateForm()) return;
-
+ if (!document) return alert("Please upload the document.");
   const payload = {
     partNumber: selectedPart,
     partDesc: partDetails.partDesc,
@@ -101,8 +105,10 @@ const AddReceivingInspectionReport = () => {
     reportNo: partDetails.reportNo,
     date: partDetails.date,
     qty: partDetails.qty,
+    qtyReceive: form.qtyReceive,
     invoiceObservation: form.invoiceObservation,
     manufacturerCertObservation: form.manufacturerCertObservation,
+    dateOfExpiryObservation: form.dateOfExpiryObservation,
     supplierCertObservation: form.supplierCertObservation,
     fullTraceabilityObservation: form.fullTraceabilityObservation,
     batchNumberObservation: form.batchNumberObservation,
@@ -123,9 +129,15 @@ const AddReceivingInspectionReport = () => {
     userAction: "1",
     userRole: sessionStorage.getItem('roleId'),
   };
-
+  const formData = new FormData();
+    formData.append("document", document);
+    formData.append("report", JSON.stringify(payload));
   try {
-    const response = await submitInspectionReport(payload);
+    const response = await submitInspectionReport(formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
     console.log("Report submitted successfully:", response.data);
     alert("Report submitted successfully");
     // reset form if needed
@@ -179,10 +191,10 @@ const AddReceivingInspectionReport = () => {
                             required
                           >
                             <option value="">Select a part number</option>
-                            {partNumbers.map((part) => (
-                              <option key={part.partNumber} value={part.partNumber}>
-                                {part.partNumber}
-                              </option>
+                            {Array.isArray(partNumbers) && partNumbers.map((part) => (
+                            <option key={part.partNumber} value={part.partNumber}>
+                            {part.partNumber}
+                            </option>
                             ))}
                           </select>
                         )}
@@ -262,6 +274,17 @@ const AddReceivingInspectionReport = () => {
                           value={partDetails.qty}
                           onChange={handleChange}
                           disabled
+                        />
+                      </div>
+                      <div className="col-md-6 p-2 d-flex">
+                        <label className="col-md-4 mt-2">Receive Qty</label>
+                        <input
+                          className="form-control w-100"
+                          type="text"
+                          name="qtyReceive"
+                          value={form.qtyReceive}
+                          onChange={handleChange}
+                          
                         />
                       </div>
                       </div>
@@ -346,7 +369,7 @@ const AddReceivingInspectionReport = () => {
                             </tr>
                             <tr>
                               <td>6</td>
-                              <td>Date of Manufacturing & Date of Expiry(If Applicable)</td>
+                              <td>Date of Manufacturing(If Applicable)</td>
                               <td>Must match(Physical Unit lable & all COC)</td>
                               <td><input
                           className="form-control w-100"
@@ -358,9 +381,23 @@ const AddReceivingInspectionReport = () => {
                           required
                         /></td>
                             </tr>
-
                             <tr>
                               <td>7</td>
+                              <td>Date of Expiry(If Applicable)</td>
+                              <td>Must match(Physical Unit lable & all COC)</td>
+                              <td><input
+                          className="form-control w-100"
+                          type="text"
+                          name="dateOfExpiryObservation"
+                          value={form.dateOfExpiryObservation}
+                          onChange={handleChange}
+                          placeholder="Enter Date in 'YYYY-mm-DD' format"
+                          required
+                        /></td>
+                            </tr>
+
+                            <tr>
+                              <td>8</td>
                               <td>Shelf Life(If Applicable)</td>
                               <td>80% and above</td>
                               <td><input
@@ -374,7 +411,7 @@ const AddReceivingInspectionReport = () => {
                             </tr>
 
                             <tr>
-                              <td>8</td>
+                              <td>9</td>
                               <td>Technical Data Sheet(TDS) & MSDS</td>
                               <td>Must Available</td>
                               <td><input
@@ -388,7 +425,7 @@ const AddReceivingInspectionReport = () => {
                             </tr>
 
                             <tr>
-                              <td>9</td>
+                              <td>10</td>
                               <td>Material Condition</td>
                               <td>No Damage / No Leakage</td>
                               <td><input
@@ -401,7 +438,7 @@ const AddReceivingInspectionReport = () => {
                         /></td>
                             </tr>
                             <tr>
-                            <td>10</td>
+                            <td>11</td>
                               <td>Specification(If any)</td>
                               <td>Must Match with Purchase Order Specification</td>
                               <td><input
@@ -414,7 +451,7 @@ const AddReceivingInspectionReport = () => {
                         /></td>
                             </tr>
                             <tr>
-                            <td>11</td>
+                            <td>12</td>
                               <td>Documents(If Import)</td>
                               <td>Air Way Bill(AWB) & Bill Of Entry(If Available)</td>
                               <td><input
@@ -429,7 +466,7 @@ const AddReceivingInspectionReport = () => {
                         </tbody>
                       </table>
                     </div>
-                    <div className="col-md-6 p-2 d-flex">
+                      <div className="col-md-6 p-2 d-flex">
                         <label className="col-md-4 mt-2">LOT Accepted(Yes/No/With Deviation)</label>
                         <input
                           className="form-control w-100"
@@ -451,8 +488,22 @@ const AddReceivingInspectionReport = () => {
                           required
                         />
                       </div>
-                      </div>
-                      </div>
+                      <div className="text-end mb-3">
+                      <label >
+                    Upload Documents
+                    </label>
+                      <input
+                    className="form-control w-100 p-0"
+                    type="file"
+                    id="document"
+                    name="document"
+                    onChange={(e) => setDocument(e.target.files[0])}
+                
+                    />
+                       {document && <div className="mt-1"><small>Uploaded: {document.name}</small></div>}
+                    </div>
+                    </div>
+                  </div>
                     <div className="text-end mb-3">
                       <button 
                         className="btn btn-success"
@@ -461,15 +512,16 @@ const AddReceivingInspectionReport = () => {
                         Submit
                       </button>
                     </div>
-
+                      
                   </form>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      
       <Footer />
+      </div>
     </div>
   );
 };

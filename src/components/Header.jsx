@@ -17,11 +17,13 @@ import { useNavigate } from "react-router-dom";
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const username = sessionStorage.getItem('username');
+  const role =sessionStorage.getItem('role');
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
   const handlelogout = () => {
-    
+    sessionStorage.clear(); //clear token and other session data
     navigate("/");
     toast.success("Log out Successful");
   };
@@ -59,8 +61,8 @@ const Header = () => {
                 <img src={ProfileLogo} alt="" className={styles.avatar} />
               </div>
               <div className={styles.userInfo}>
-                <div className={styles.userName}>Hrishikesh chavan</div>
-                <div className={styles.userRole}>Administrator</div>
+                <div className={styles.userName}>{username}</div>
+                <div className={styles.userRole}>{role}</div>
               </div>
               <ChevronDown size={16} className={styles.dropdownIcon} />
             </button>
@@ -69,7 +71,7 @@ const Header = () => {
             {isDropdownOpen && (
               <div className={styles.dropdownMenu}>
                 <div className={styles.dropdownHeader}>
-                  <p className={styles.dropdownName}>Hrishikesh chavan</p>
+                  <p className={styles.dropdownName}>{username}</p>
                   <p className={styles.dropdownEmail}>Admin@example.com</p>
                 </div>
                 <a href="#" className={styles.dropdownItem}>

@@ -1,23 +1,66 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "../../Header";
 import Footer from "../../Footer";
 import Sidebar from "../../Sidebar";
 // import { createRequisition } from "../../../services/db_manager";
 import CustomBreadcrumb from "../../Breadcrumb/CustomBreadcrumb";
-import { createMaterialRequisition } from "../../../services/db_manager";
+import { createMaterialRequisition, fetchPartNumbersAndDescriptions } from "../../../services/db_manager";
 
 const AddRequisition = () => {
   const [form, setForm] = useState({
     materialRequisitionNo: "",
     workOrderNo: "",
     date: "",
-    partNo: "",
+    partNumber: "",
     description: "",
     requestedQty: "",
     issueQty: "",
     issuedQty: "",
     batchLotNo: "",
+    unitOfMeasurement: "",
   });
+
+  // State to store dropdown options from API
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+  
+    // Fetch data once on component mount
+    useEffect(() => {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const response = await fetchPartNumbersAndDescriptions(); // replace with actual API call
+          setData(response);
+          setError(null);
+        } catch (err) {
+          console.error("API Error:", err);
+          setError("Failed to load product data. Please try again.");
+          // fallback data
+          setData([
+            { productName: "Sample A", productDescription: "Desc A" },
+            { productName: "Sample B", productDescription: "Desc B" },
+          ]);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, []);
+  
+    // Handle part number (productName) change
+    const handleProductChange = (e) => {
+      const selected = e.target.value;
+      const match = data.find((item) => item.productName === selected);
+  
+      // Update form state with both partNumber and description
+      setForm(prevForm => ({
+        ...prevForm,
+        partNumber: selected,
+        description: match ? match.productDescription : ""
+      }));
+    };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,9 +96,9 @@ const AddRequisition = () => {
       type: "number",
       length: 12,
     },
-    partNo: {
-      type: "number",
-      length: 12,
+    partNumber: {
+      length: 255,
+      regex: /^[a-zA-Z0-9\s]*$/,
     },
     description: {
       length: 255,
@@ -125,8 +168,8 @@ const AddRequisition = () => {
 
     // If all validation passes, proceed with submitting
     try {
-        const response = await createMaterialRequisition(form);
-        console.log("Requisition added successfully:", response.data);
+      const response = await createMaterialRequisition(form);
+      console.log("Requisition added successfully:", response.data);
       alert("Requisition Added Successfully!");
       // location.reload();
 
@@ -135,12 +178,13 @@ const AddRequisition = () => {
         materialRequisitionNo: "",
         workOrderNo: "",
         date: "",
-        partNo: "",
+        partNumber: "",
         description: "",
         requestedQty: "",
         issueQty: "",
         issuedQty: "",
         batchLotNo: "",
+        unitOfMeasurement: "",
       });
     } catch (error) {
       console.error("Error adding requisition:", error);
@@ -215,34 +259,65 @@ const AddRequisition = () => {
                         />
                       </div>
                       <div className="col-md-6 p-2 d-flex">
-                        <label className="col-md-4 mt-2">Part No</label>
-                        <input
-                          className="form-control w-100"
-                          type="text"
-                          name="partNo"
-                          onInput={(event) => {
-                            validateDataType(event, "N");
-                          }}
-                          value={form.partNo}
-                          onChange={handleChange}
-                          required
-                        />
+                        <label className="col-md-4 mt-2">Part Number</label>
+                        {loading ? (
+                          <div className="d-flex align-items-center">
+                            <div
+                              className="spinner-border text-primary me-2"
+                              role="status"
+                            >
+                              <span className="visually-hidden">Loading...</span>
+                            </div>
+                            <span>Loading part numbers...</span>
+                          </div>
+                        ) : error ? (
+                          <div className="alert alert-danger w-100">{error}</div>
+                        ) : (
+                          <select
+                            className="form-select w-100"
+                            name="partNumber"
+                            value={form.partNumber}
+                            onChange={handleProductChange}
+                            required
+                          >
+                            <option value="">Select a part number</option>
+                            {data.map((item, index) => (
+                              <option key={index} value={item.productName}>
+                                {item.productName}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     </div>
 
+                    {/* Description Dropdown (Disabled and auto-selected) */}
                     <div className="col-md-12 p-3 d-flex">
                       <label className="col-md-2 mt-2">Description</label>
-                      <textarea
-                        className="form-control w-100"
-                        name="description"
-                        value={form.description}
-                        onInput={(event) => {
-                          validateDataType(event, "A");
-                        }}
-                        onChange={handleChange}
-                        style={{ height: "70px" }}
-                        required
-                      ></textarea>
+                      {loading ? (
+                        <div className="d-flex align-items-center">
+                          <div
+                            className="spinner-border text-primary me-2"
+                            role="status"
+                          >
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                          <span>Loading descriptions...</span>
+                        </div>
+                      ) : error ? (
+                        <div className="alert alert-danger w-100">{error}</div>
+                      ) : (
+                        <select
+                          className="form-select w-100"
+                          name="description"
+                          value={form.description}
+                          disabled
+                        >
+                          <option value="">
+                            {form.description || "Auto-selected"}
+                          </option>
+                        </select>
+                      )}
                     </div>
 
                     <div className="col-md-12 d-flex">
@@ -307,10 +382,36 @@ const AddRequisition = () => {
                       </div>
                     </div>
 
-                    <div className="col-md-12 text-end m-1 p-4 text-right">
-                      <button type="submit" className="btn btn-primary">
-                        Add Requisition
-                      </button>
+                    <div className="col-md-12 d-flex">
+                        <div className="col-md-6 p-2 d-flex">
+                          <label className="col-md-4 mt-2">Unit of Measurement</label>
+                          <select
+                            className="form-select w-100"
+                            name="unitOfMeasurement"
+                            value={form.unitOfMeasurement}
+                            onChange={handleChange}
+                            required
+                          >
+                            <option value="">Select Unit</option>
+                            <option value="EA">EA</option>
+                            <option value="RL">RL</option>
+                            <option value="QT">QT</option>
+                            <option value="GAL">GAL</option>
+                            <option value="KIT">KIT</option>
+                            <option value="LTR">LTR</option>
+                            <option value="SHT">SHT</option>
+                            <option value="Sq.ft">Sq.ft</option>
+                            <option value="Sq.mtr">Sq.mtr</option>
+                          </select>
+                        </div>
+
+                        <div className="col-md-6 p-2 d-flex text-end">
+                          <div className="col-md-4 mt-2 text-end">
+                            <button type="submit" className="btn btn-primary">
+                          Add Requisition
+                        </button>
+                          </div>
+                      </div>
                     </div>
                   </form>
                 </div>

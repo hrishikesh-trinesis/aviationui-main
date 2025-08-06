@@ -4,27 +4,9 @@ import Footer from "../components/Footer";
 import Sidebar from "../components/Sidebar";
 import axiosInstance from "../axiosConfig";
 
-// 🔁 Custom hook outside component
-function useRoleMenus(roleId) {
-  const [menuItems, setMenuItems] = useState([]);
-
-  useEffect(() => {
-    if (!roleId) return;
-
-    axiosInstance.get(`/api/roles/roleMenus/${roleId}`)
-      .then(res => {
-        setMenuItems(res.data);
-        sessionStorage.setItem("menuItems", JSON.stringify(res.data)); // ✅ set localStorage once
-      })
-      .catch(console.error);
-  }, [roleId]);
-
-  return menuItems;
-}
-
 const HomePage = () => {
-  const roleId = sessionStorage.getItem('roleId') || '';
-  const menuItems = useRoleMenus(roleId); // ✅ Use the hook properly
+  //const roleId = sessionStorage.getItem('roleId') || '';
+  //const menuItems = useRoleMenus(roleId); // ✅ Use the hook properly
 
   return (
     <div className="wrapper">
