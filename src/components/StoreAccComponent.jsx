@@ -54,14 +54,25 @@ const StoreAccComponent = () => {
   // ########################## HOOKS ##############################
 
   // This function is used to send save request
-  async function sendSaveRequest() {
-    console.log("print")
-    if (listData.includes(partNum)) {
-      let updateRes = await updateStore(partNum, form);
-    } else {
+  async function sendSaveRequest(event) {
+    // Prevent default form submission
+    event.preventDefault();
+    
+    console.log("Save request initiated");
+    console.log(listData,"Save request initiated");
+
+    // if (listData.includes(form.partNum)) {
+    //   console.log("Updating existing part:", form.partNum);
+    //   let updateRes = await updateStore(form.partNum, form);
+    //   console.log("Update response:", updateRes);
+    // } else {
+    //   console.log("Creating new part:", form.partNum);
+    {console.log(form,"form")}
       let createRes = await createStore(form);
-    }
+      console.log("Create response:", createRes);
+    // }
   }
+  
 
   // This function is used to handle view response
   async function handleViewRequest(event, partNum) {

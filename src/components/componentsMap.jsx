@@ -61,6 +61,10 @@ import ViewProduct from './ViewProduct.jsx';
 import ViewStoreAcc from './ViewStoreAcc.jsx';
 import ViewSupplierRegis from './ViewSupplierRegis.jsx';
 import ViewUser from './ViewUser.jsx';
+import AddWorkOrder from './Workorder/AddWorkOrder/AddWorkOrder.jsx';
+import editWorkOrder from './Workorder/editWorkOrder.jsx';
+import ViewWorkOrder from './Workorder/ViewWorkOrder.jsx';
+import WorkorderTable from './Workorder/WorkorderTable.jsx';
 
 const componentsMap = {
   "AddDispatchReport": AddDispatchReport,
@@ -125,6 +129,10 @@ const componentsMap = {
   "ViewStoreAcc": ViewStoreAcc,
   "ViewSupplierRegis": ViewSupplierRegis,
   "ViewUser": ViewUser,
+  "AddWorkOrder": AddWorkOrder,
+  "editWorkOrder": editWorkOrder,
+  "ViewWorkOrder": ViewWorkOrder,
+  "WorkorderTable": WorkorderTable,
 };
 
 export default componentsMap;

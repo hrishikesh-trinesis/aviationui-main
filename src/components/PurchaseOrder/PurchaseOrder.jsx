@@ -556,10 +556,9 @@ export default function PurchaseOrderForm() {
 
       // Call the API to save the data
       const responce= await createPurchaseOrder(payload);
-      if(!responce.success){
+      if(!responce|| responce.error){
         toast.error("Purchase order already saved")
-      }
-      toast.success("Purchase Order saved successfully!")
+      }else toast.success("Purchase Order saved successfully!")
       // alert("Purchase Order saved successfully!");
     } catch (error) {
       toast.error("Purchase order already saved or Error for saving Purchase Order.")

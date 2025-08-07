@@ -24,11 +24,11 @@ const AddPurchaseRequisition = () => {
   // State to store all the purchase requisitions added
   const [purchaseRequisitions, setPurchaseRequisitions] = useState([]);
 
+
   // State to store dropdown options from API
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   // Fetch data once on component mount
   useEffect(() => {
     const fetchData = async () => {
@@ -57,7 +57,7 @@ const AddPurchaseRequisition = () => {
   const handleProductChange = (e) => {
     const selected = e.target.value;
     const match = data.find((item) => item.productName === selected);
-
+    
     // Update form state with both partNumber and description
     setForm(prevForm => ({
       ...prevForm,
