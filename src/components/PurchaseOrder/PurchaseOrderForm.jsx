@@ -1550,15 +1550,15 @@ export default function PurchaseOrderForm() {
                       <div className={styles.addressTitle}>Address:</div>
                       <div>
                         <div className={styles.addressText}>
-                          <div>
-                            AMC TECHNOLOGY
-                            <br />
-                            105, Hiday Industrial Estate, Hira Industrial Park
-                            <br />
-                            Off Western Express Highway, Vasai Phata,
-                            <br />
-                            Vasai (East) Dist - Palghar, 401208
-                          </div>
+                          <textarea
+                            className={styles.textareaField}
+                            value={formData.address}
+                            onChange={(e) =>
+                              handleInputChange("address", e.target.value)
+                            }
+                            rows={4}
+                            placeholder="Enter address..."
+                          />
                         </div>
                       </div>
                     </div>
@@ -1578,6 +1578,7 @@ export default function PurchaseOrderForm() {
                           handleInputChange("paymentTerms", e.target.value)
                         }
                         style={{ width: "100%" }}
+                        disabled
                       />
                     </div>
                   </div>
@@ -1742,7 +1743,7 @@ export default function PurchaseOrderForm() {
                               : ""}
                           </td>
                         </tr>
-                        <tr>
+                        {/* <tr>
                           <td className={styles.totalLabel}>P&F</td>
                           <td className={styles.totalValue}>
                             <input
@@ -1846,7 +1847,7 @@ export default function PurchaseOrderForm() {
                               }
                             />
                           </td>
-                        </tr>
+                        </tr> */}
                         <tr>
                           <td className={styles.totalLabel}>Total</td>
                           <td className={styles.totalValue}>

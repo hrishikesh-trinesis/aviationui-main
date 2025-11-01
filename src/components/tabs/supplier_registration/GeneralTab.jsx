@@ -356,7 +356,7 @@ const GeneralTab = ({
                 style={{ width: "150px", height: "38px" }}
               >
                 {" "}
-                <option value="" disabled>
+                <option value="">
                   Country Code
                 </option>
                 {countryCodes.map((item) => (
